@@ -1,4 +1,7 @@
 # TuxORM
 
 
-Its a basic to use piece of crap!
+I built an ORM
+
+![cried 37](https://imgflip.com/i/2u75ls)
+
