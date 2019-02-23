@@ -3,8 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/tuxorm.iml" filepath="$PROJECT_DIR$/tuxorm.iml" />
-      <module fileurl="file://$PROJECT_DIR$/tuxorm-core/tuxorm-core.iml" filepath="$PROJECT_DIR$/tuxorm-core/tuxorm-core.iml" />
-      <module fileurl="file://$PROJECT_DIR$/tuxorm-mysql/tuxorm-mysql.iml" filepath="$PROJECT_DIR$/tuxorm-mysql/tuxorm-mysql.iml" />
     </modules>
   </component>
 </project>

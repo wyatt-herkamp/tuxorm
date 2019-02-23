@@ -4,6 +4,7 @@ import me.kingtux.tuxjsql.core.Column;
 import me.kingtux.tuxjsql.core.CommonDataTypes;
 import me.kingtux.tuxjsql.core.Table;
 import me.kingtux.tuxjsql.core.TuxJSQL;
+import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 
 import java.lang.reflect.Field;
@@ -62,21 +63,32 @@ public class ORMConnection {
 
     public void registerTable(Class<?> table) {
         if (getTableByClass(table) != null) return;
+        if (table.getAnnotation(DBTable.class) == null) throw new TORMException("Hey add @DBTable to your class!");
         List<Column> columns = new ArrayList<>();
         for (Field field : table.getDeclaredFields()) {
             if (field.getAnnotation(TableColumn.class) == null) continue;
             if (!TOUtils.isCompatible(field))
-                throw new IncompatibleTypeException("Hey the following is incompatible! " + field.getName() + " " + field.getType().getSimpleName());
+                throw new TORMException("Hey the following is incompatible! " + field.getName() + " " + field.getType().getSimpleName());
             if (field.getType().isAssignableFrom(List.class)) {
                 registerListTable(field);
                 continue;
-            } else if (!TOUtils.isbasic(field.getType())) {
-                registerTable(field.getType());
+            } else if (!TOUtils.isBasic(field.getType())) {
+                if (TOUtils.containsFieldWithType(field.getType(), table)) {
+                    throw new TORMException("Keep it simple stupid man!");
+                } else
+                    registerTable(field.getType());
             }
             columns.add(TOUtils.createColumn(field));
         }
-        //columns.add(TuxJSQL.getBuilder().createColumn("txorm_identifier", CommonDataTypes.INT, false, false, false, true));
-        tables.add(TuxJSQL.getBuilder().createTable(TOUtils.getTableName(table), columns).createIfNotExists());
+
+        if (columns.isEmpty()) {
+            throw new TORMException("Hey no Columns Found!");
+        }
+        try {
+            tables.add(TuxJSQL.getBuilder().createTable(TOUtils.getTableName(table), columns).createIfNotExists());
+        } catch (Exception e) {
+            throw new TORMException(e);
+        }
     }
 
     private void registerListTable(Field field) {

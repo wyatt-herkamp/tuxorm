@@ -16,7 +16,13 @@ public interface Dao<T, ID> {
 
     List<T> fetchAll();
 
-    List<T> fetch(String columnName, String value);
+    List<T> fetch(String columnName, Object value);
+
+    default T fetchFirst(String columnName, Object value) {
+        List<T> t = fetch(columnName, value);
+        if (t == null || t.size()==0) return null;
+        return t.get(0);
+    }
 
     void updateOrCreate(T t);
 }

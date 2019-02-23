@@ -7,7 +7,6 @@ import me.kingtux.tuxjsql.core.TuxJSQL;
 import me.kingtux.tuxorm.annotations.TableColumn;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,16 +34,9 @@ public class DaoImpl<T, ID> implements Dao<T, ID> {
     public T findByID(ID id) {
         try {
             return (T) TOUtils.buildItem(tableClass, tableClass.getConstructor().newInstance(), tb.select(id), tb, connection);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new TORMException(e);
         }
-        return null;
     }
 
     @Override
@@ -62,13 +54,13 @@ public class DaoImpl<T, ID> implements Dao<T, ID> {
                     Table listTable = connection.getListTable(field);
                     listTable.delete(sqlBuilder.createWhere().start("parent", tid));
                     listFields.add(field);
-                } else if (TOUtils.isbasic(field.getType())) {
-                    items.put(tb.getColumnByName(columnName), field.get(t));
+                } else if (TOUtils.isBasic(field.getType())) {
+                    Object value = field.get(t);
+                    items.put(tb.getColumnByName(columnName), value instanceof Boolean ? value.toString() : value);
                 } else {
                     Field pf = TOUtils.getPrimaryKeyField(tb, field.getType());
                     pf.setAccessible(true);
                     Object o = pf.get(field.get(t));
-                    System.out.println(o.getClass().getName()+" "+o);
                         items.put(tb.getColumnByName(columnName), o == null ? 0 : o);
 
                 }
@@ -84,13 +76,21 @@ public class DaoImpl<T, ID> implements Dao<T, ID> {
                 TableColumn tc = field.getAnnotation(TableColumn.class);
                 Table listTable = connection.getListTable(field);
                 List<?> values = (List<?>) field.get(t);
-                if (TOUtils.isbasic(field.getType())) {
+                if (TOUtils.isBasic(field.getType())) {
                     for (Object o : values) {
-                        listTable.insertAll(tid, o);
+
+                        if (o instanceof Boolean) {
+                            listTable.insertAll(tid, o.toString());
+                        } else {
+                            listTable.insertAll(tid, o);
+                        }
                     }
                 } else {
                     for (Object o : values) {
                         Field pf = TOUtils.getPrimaryKeyField(tb, o.getClass());
+                        //You know sometimes something acts stupid
+                        if(pf==null) continue;
+                        //End of stupid check
                         pf.setAccessible(true);
                         Object pko = pf.get(o);
                         listTable.insertAll(tid, pko);
@@ -124,7 +124,7 @@ public class DaoImpl<T, ID> implements Dao<T, ID> {
             try {
                 if (field.getType().isAssignableFrom(List.class)) {
                     listFields.add(field);
-                } else if (TOUtils.isbasic(field.getType())) {
+                } else if (TOUtils.isBasic(field.getType())) {
                     Column column = tb.getColumnByName(columnName);
                     if (column.isPrimary()) {
                         if (!column.isAutoIncrement()) {
@@ -133,7 +133,8 @@ public class DaoImpl<T, ID> implements Dao<T, ID> {
                     }
                     if (column.isAutoIncrement()) continue;
                     //Its not something that should be decided by the sql
-                    items.put(column, field.get(t));
+                    Object value = field.get(t);
+                    items.put(column, value instanceof Boolean ? value.toString() : value);
                 } else {
                     Field pf = TOUtils.getPrimaryKeyField(tb, field.getType());
                     pf.setAccessible(true);
@@ -153,9 +154,13 @@ public class DaoImpl<T, ID> implements Dao<T, ID> {
                 TableColumn tc = field.getAnnotation(TableColumn.class);
                 Table listTable = connection.getListTable(field);
                 List<?> values = (List<?>) field.get(t);
-                if (TOUtils.isbasic(TOUtils.getFirstTypeParam(field))) {
+                if (TOUtils.isBasic(TOUtils.getFirstTypeParam(field))) {
                     for (Object o : values) {
-                        listTable.insertAll(id, o);
+                        if (o instanceof Boolean) {
+                            listTable.insertAll(id, o.toString());
+                        } else {
+                            listTable.insertAll(id, o);
+                        }
                     }
                 } else {
                     for (Object o : values) {
@@ -175,34 +180,19 @@ public class DaoImpl<T, ID> implements Dao<T, ID> {
     public List<T> fetchAll() {
         try {
             return (List<T>) TOUtils.buildItems(tableClass, tableClass.getConstructor().newInstance(), tb.select(null), tb, connection);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new TORMException(e);
         }
-        return null;
 
     }
 
     @Override
-    public List<T> fetch(String columnName, String value) {
+    public List<T> fetch(String columnName, Object value) {
         try {
-            return (List<T>) TOUtils.buildItems(tableClass, tableClass.getConstructor().newInstance(), tb.select(TuxJSQL.getBuilder().createWhere().start(columnName, value)), tb, connection);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            return (List<T>) TOUtils.buildItems(tableClass, tableClass.getConstructor().newInstance(), tb.select(TuxJSQL.getBuilder().createWhere().start(columnName, TOUtils.cleanObject(value))), tb, connection);
+        } catch (Exception e) {
+            throw new TORMException(e);
         }
-        return null;
-
     }
 
     @Override
