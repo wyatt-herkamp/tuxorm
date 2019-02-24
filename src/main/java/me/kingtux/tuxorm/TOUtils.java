@@ -4,6 +4,7 @@ import me.kingtux.tuxjsql.core.*;
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.sql.ResultSet;
@@ -15,7 +16,7 @@ import java.util.Map;
 @SuppressWarnings("All")
 public class TOUtils {
     private static List<Class<?>> basicTypes = Arrays.asList(long.class, Long.class, String.class, Boolean.class, boolean.class, int.class, Integer.class);
-
+    private static List<Class<?>> incompatibleTypes = Arrays.asList(Map.class);
     public static boolean isBasic(Class<?> e) {
         return basicTypes.contains(e);
     }
@@ -29,6 +30,10 @@ public class TOUtils {
     public static Object cleanObject(Object o) {
         if (o instanceof Boolean) {
             return o.toString();
+        } else if (o.getClass().isEnum()) {
+            return ((Enum) o).name();
+        } else if (o.getClass().isAssignableFrom(File.class)) {
+            return ((File) o).getAbsolutePath();
         }
         return o;
     }
@@ -36,6 +41,10 @@ public class TOUtils {
     public static Object rebuiltObject(Class<?> type, Object value) {
         if (type == Boolean.class || type == boolean.class) {
             return Boolean.parseBoolean((String) value);
+        } else if (type.isEnum()) {
+            return Enum.valueOf((Class<? extends Enum>) type, ((String) value));
+        } else if (type.isAssignableFrom(File.class)) {
+            return new File((String) value);
         }
         return value;
     }
@@ -53,10 +62,12 @@ public class TOUtils {
         if (field.getType().isArray()) {
             return false;
         }
-        if (field.getType().isAssignableFrom(Map.class)) {
-            return false;
+        for (Class<?> s : incompatibleTypes) {
+            if(field.getType().isAssignableFrom(s)){
+                return true;
+            }
         }
-        return true;
+        return false;
     }
 
     public static Class<?> getFirstTypeParam(Field field) {
@@ -102,7 +113,7 @@ public class TOUtils {
                         Object value = r.getObject(tc.name().isEmpty() ? field.getName().toLowerCase() : tc.name());
                         field.set(st, rebuiltObject(field.getType(), value));
                     } else if (field.getType().isAssignableFrom(List.class)) {
-                        field.set(st, isBasic(getFirstTypeParam(field)) ? buildSimpleList(o, connection.getListTable(field), connection) : buildComlexList(o, connection.getListTable(field), field.getType().getConstructor().newInstance(), connection));
+                        field.set(st, isBasic(getFirstTypeParam(field)) ? buildSimpleList(o, connection.getListTable(field), connection) : buildComplexList(o, connection.getListTable(field), field.getType().getConstructor().newInstance(), connection));
                     } else {
                         field.set(st, connection.getValue(field.getType().getConstructor().newInstance(), r.getInt(tc.name().isEmpty() ? field.getName().toLowerCase() : tc.name())));
                     }
@@ -132,7 +143,7 @@ public class TOUtils {
         return o;
     }
 
-    public static <T> List<T> buildComlexList(Object parentID, Table table, T t, ORMConnection ormConnection) {
+    public static <T> List<T> buildComplexList(Object parentID, Table table, T t, ORMConnection ormConnection) {
         ResultSet set = table.select(TuxJSQL.getBuilder().createWhere().start("parent", parentID));
         List<T> o = new ArrayList<>();
         try {
