@@ -1,6 +1,6 @@
 package me.kingtux.tuxorm.annotations;
 
-import me.kingtux.tuxorm.DataType;
+import me.kingtux.tuxorm.DataTypes;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -20,5 +20,5 @@ public @interface TableColumn {
 
     boolean primary() default false;
 
-    DataType dataType() default DataType.DEFAULT;
+    DataTypes dataType() default DataTypes.DEFAULT;
 }

@@ -1,9 +1,9 @@
 package me.kingtux.tuxorm;
 
-import me.kingtux.tuxjsql.core.ColumnType;
 import me.kingtux.tuxjsql.core.CommonDataTypes;
+import me.kingtux.tuxjsql.core.DataType;
 
-public enum DataType {
+public enum DataTypes {
     TEXT(CommonDataTypes.TEXT),
     INT(CommonDataTypes.INT),
     DOUBLE(CommonDataTypes.DOUBLE),
@@ -11,13 +11,13 @@ public enum DataType {
     BOOLEAN(CommonDataTypes.TEXT),
     BIGINT(CommonDataTypes.BIGINT);
 
-    private ColumnType columnType;
+    private DataType columnType;
 
-    DataType(ColumnType columnType) {
+    DataTypes(DataType columnType) {
         this.columnType = columnType;
     }
 
-    public ColumnType getColumnType(Class<?> type) {
+    public DataType getColumnType(Class<?> type) {
         if (columnType == null) {
             if (type == String.class) {
                 return TEXT.columnType;

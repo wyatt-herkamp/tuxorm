@@ -84,7 +84,7 @@ public class TOUtils {
         }
     }
 
-    public static ColumnType typeFor(Class<?> firstTypeParam) {
+    public static DataType typeFor(Class<?> firstTypeParam) {
         if (firstTypeParam == String.class || firstTypeParam == Boolean.class || firstTypeParam == boolean.class) {
             return CommonDataTypes.TEXT;
         } else {
