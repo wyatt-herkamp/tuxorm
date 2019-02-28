@@ -32,6 +32,7 @@ public class DaoImpl<T, ID> implements Dao<T, ID> {
 
     @Override
     public T findByID(ID id) {
+        if(id==null) return null;
         try {
             return (T) TOUtils.buildItem(tableClass, tableClass.getConstructor().newInstance(), tb.select(id), tb, connection);
         } catch (Exception e) {
@@ -188,6 +189,7 @@ public class DaoImpl<T, ID> implements Dao<T, ID> {
 
     @Override
     public List<T> fetch(String columnName, Object value) {
+        if(columnName==null||value==null) return new ArrayList<>();
         try {
             return (List<T>) TOUtils.buildItems(tableClass, tableClass.getConstructor().newInstance(), tb.select(TuxJSQL.getBuilder().createWhere().start(columnName, TOUtils.cleanObject(value))), tb, connection);
         } catch (Exception e) {

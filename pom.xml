@@ -70,11 +70,23 @@
             <version>2.6</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>me.kingtux</groupId>
+            <artifactId>tuxjsql-core</artifactId>
+            <version>1.0</version>
+        </dependency>
         <dependency>
             <groupId>me.kingtux</groupId>
             <artifactId>tuxjsql-mysql</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.kingtux</groupId>
+            <artifactId>tuxjsql-sqlite</artifactId>
+            <version>1.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
