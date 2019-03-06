@@ -19,12 +19,12 @@ public class DaoImpl<T, ID> implements Dao<T, ID> {
     private Class<?> tableClass;
     private Builder sqlBuilder = TuxJSQL.getBuilder();
 
-    public DaoImpl(ORMConnection connection, Table table) {
+    DaoImpl(ORMConnection connection, Table table) {
         this.connection = connection;
         this.tb = table;
     }
 
-    public DaoImpl(ORMConnection connection, Table tb, Class<?> tableClass) {
+    DaoImpl(ORMConnection connection, Table tb, Class<?> tableClass) {
         this.connection = connection;
         this.tb = tb;
         this.tableClass = tableClass;
@@ -198,8 +198,42 @@ public class DaoImpl<T, ID> implements Dao<T, ID> {
     }
 
     @Override
-    public void updateOrCreate(T t) {
+    public void delete(T t) {
+        deleteById((ID) TOUtils.getPrimaryKeyValue(tb, t));
+
+
     }
+
+    @Override
+    public void deleteById(ID t) {
+        tb.delete(t);
+        for (Field field : t.getClass().getDeclaredFields()) {
+            if (field.getAnnotation(TableColumn.class) == null) continue;
+            TableColumn tc = field.getAnnotation(TableColumn.class);
+            String columnName = tc.name().isEmpty() ? field.getName().toLowerCase() : tc.name();
+            field.setAccessible(true);
+            if (field.getType().isAssignableFrom(List.class)) {
+                Table listTable = connection.getListTable(field);
+                listTable.delete(sqlBuilder.createWhere().start("parent", t));
+            }
+        }
+    }
+
+    @Override
+    public void updateOrCreate(T t) {
+        T item = findByID((ID) TOUtils.getPrimaryKeyValue(tb, t));
+        if (item == null) {
+            create(t);
+        } else {
+            update(t);
+        }
+    }
+
+    @Override
+    public String getTableName() {
+        return tb.getName();
+    }
+
 
     public ORMConnection getConnection() {
         return connection;

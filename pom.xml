@@ -70,7 +70,6 @@
             <version>2.6</version>
             <scope>compile</scope>
         </dependency>
-
         <dependency>
             <groupId>me.kingtux</groupId>
             <artifactId>tuxjsql-core</artifactId>

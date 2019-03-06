@@ -24,7 +24,15 @@ public interface Dao<T, ID> {
         return t.get(0);
     }
 
+    void delete(T t);
+
+    void deleteById(ID t);
+
     void updateOrCreate(T t);
+
+    String getTableName();
+
+    ORMConnection getConnection();
 }
 
 

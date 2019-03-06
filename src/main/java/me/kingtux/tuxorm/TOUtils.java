@@ -34,6 +34,8 @@ public class TOUtils {
             return ((Enum) o).name();
         } else if (o.getClass().isAssignableFrom(File.class)) {
             return ((File) o).getAbsolutePath();
+        } else if (o.getClass() == char[].class) {
+            return String.valueOf((char[]) o);
         }
         return o;
     }
@@ -45,6 +47,8 @@ public class TOUtils {
             return Enum.valueOf((Class<? extends Enum>) type, ((String) value));
         } else if (type.isAssignableFrom(File.class)) {
             return new File((String) value);
+        } else if (type == char[].class) {
+            return ((String) value).toCharArray();
         }
         return value;
     }

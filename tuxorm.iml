@@ -11,10 +11,11 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.6" level="project" />
-    <orderEntry type="library" name="Maven: me.kingtux:tuxjsql-mysql:1.0.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: me.kingtux:tuxjsql-core:1.0.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: mysql:mysql-connector-java:8.0.15" level="project" />
-    <orderEntry type="library" name="Maven: com.google.protobuf:protobuf-java:3.6.1" level="project" />
-    <orderEntry type="library" name="Maven: org.xerial:sqlite-jdbc:3.25.2" level="project" />
+    <orderEntry type="library" name="Maven: me.kingtux:tuxjsql-core:1.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: me.kingtux:tuxjsql-mysql:1.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: mysql:mysql-connector-java:8.0.15" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.google.protobuf:protobuf-java:3.6.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: me.kingtux:tuxjsql-sqlite:1.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.xerial:sqlite-jdbc:3.25.2" level="project" />
   </component>
 </module>

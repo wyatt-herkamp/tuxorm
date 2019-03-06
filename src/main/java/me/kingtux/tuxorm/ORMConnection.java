@@ -48,8 +48,13 @@ public class ORMConnection {
     }
 
     public <T, ID> Dao<T, ID> createDAO(T t) {
-        registerTable(t.getClass());
-        return new DaoImpl<>(this, getTableByClass(t.getClass()), t.getClass());
+        if (t instanceof Class) {
+            registerTable((Class<?>) t);
+            return new DaoImpl<>(this, getTableByClass((Class<?>) t), ((Class<?>) t));
+        } else {
+            registerTable(t.getClass());
+            return new DaoImpl<>(this, getTableByClass(t.getClass()), t.getClass());
+        }
     }
 
     public Table getListTable(Field f) {

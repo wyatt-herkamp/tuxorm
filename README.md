@@ -28,3 +28,16 @@ dependencies {
    compile "me.kingtux:tc-common:1.0"
 }
 ```
+One of these depends must be added!
+```xml
+        <dependency>
+            <groupId>me.kingtux</groupId>
+            <artifactId>tuxjsql-mysql</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>me.kingtux</groupId>
+            <artifactId>tuxjsql-sqlite</artifactId>
+            <version>1.0</version>
+        </dependency>
+```
