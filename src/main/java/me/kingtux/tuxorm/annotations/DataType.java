@@ -9,14 +9,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface TableColumn {
-    String name() default "";
+public @interface DataType {
 
-    boolean autoIncrement() default false;
-
-    boolean unique() default false;
-
-    boolean nullable() default false;
-
-    boolean primary() default false;
+    CommonDataTypes type();
 }

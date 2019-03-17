@@ -32,7 +32,11 @@ public interface Dao<T, ID> {
 
     String getTableName();
 
-    ORMConnection getConnection();
+    TOConnection getConnection();
+
+    TOObject getTOObject();
+
+    T refresh(T t);
 }
 
 

@@ -1,77 +1,71 @@
 package me.kingtux.tuxorm;
 
-import me.kingtux.tuxjsql.core.*;
+import me.kingtux.tuxjsql.core.CommonDataTypes;
+import me.kingtux.tuxjsql.core.DataType;
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 
-import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
-@SuppressWarnings("All")
 public class TOUtils {
-    private static List<Class<?>> basicTypes = Arrays.asList(long.class, Long.class, String.class, Boolean.class, boolean.class, int.class, Integer.class);
-    private static List<Class<?>> incompatibleTypes = Arrays.asList(Map.class);
+    public static final String PARENT_ID_NAME = "parent";
+    private static List<Class<?>> basicTypes = Arrays.asList(long.class, Long.class, String.class, int.class, Integer.class);
+    private static List<Class<?>> semiBasicTypes = Arrays.asList(UUID.class, Boolean.class, boolean.class, char[].class, Enum.class);
+
+
     public static boolean isBasic(Class<?> e) {
-        return basicTypes.contains(e);
-    }
-
-    public static String getTableName(Class<?> clazz) {
-        DBTable table = clazz.getAnnotation(DBTable.class);
-        if (table == null) return null;
-        return table.name().isEmpty() ? clazz.getSimpleName().toLowerCase() : table.name();
-    }
-
-    public static Object cleanObject(Object o) {
-        if (o instanceof Boolean) {
-            return o.toString();
-        } else if (o.getClass().isEnum()) {
-            return ((Enum) o).name();
-        } else if (o.getClass().isAssignableFrom(File.class)) {
-            return ((File) o).getAbsolutePath();
-        } else if (o.getClass() == char[].class) {
-            return String.valueOf((char[]) o);
-        }
-        return o;
-    }
-
-    public static Object rebuiltObject(Class<?> type, Object value) {
-        if (type == Boolean.class || type == boolean.class) {
-            return Boolean.parseBoolean((String) value);
-        } else if (type.isEnum()) {
-            return Enum.valueOf((Class<? extends Enum>) type, ((String) value));
-        } else if (type.isAssignableFrom(File.class)) {
-            return new File((String) value);
-        } else if (type == char[].class) {
-            return ((String) value).toCharArray();
-        }
-        return value;
-    }
-    public static Column createColumn(Field field) {
-        TableColumn tc = field.getAnnotation(TableColumn.class);
-        String name = tc.name().isEmpty() ? field.getName().toLowerCase() : tc.name();
-        if (isBasic(field.getType())) {
-            return TuxJSQL.getBuilder().createColumn(name, tc.dataType().getColumnType(field.getType()), tc.primary(), tc.nullable(), tc.unique(), tc.autoIncrement());
-        } else {
-            return TuxJSQL.getBuilder().createColumn(name, CommonDataTypes.INT);
-        }
-    }
-
-    public static boolean isCompatible(Field field) {
-        if (field.getType().isArray()) {
-            return false;
-        }
-        for (Class<?> s : incompatibleTypes) {
-            if(field.getType().isAssignableFrom(s)){
+        for (Class<?> c : basicTypes) {
+            if (c.isAssignableFrom(e)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public static boolean isSemiBasic(Class<?> e) {
+        for (Class<?> c : semiBasicTypes) {
+            if (c.isAssignableFrom(e)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isAnyTypeBasic(Class<?> e) {
+        return isBasic(e) || isSemiBasic(e);
+    }
+
+    public static DataType getColumnType(Class<?> type) {
+        if (type == String.class) {
+            return CommonDataTypes.TEXT;
+        } else if (type == int.class || type == Integer.class) {
+            return CommonDataTypes.INT;
+        } else if (type == double.class || type == Double.class) {
+            return CommonDataTypes.DOUBLE;
+        } else if (type == long.class || type == Long.class) {
+            return CommonDataTypes.BIGINT;
+        } else if (type == boolean.class || type == Boolean.class) {
+            return CommonDataTypes.TEXT;
+        }
+        return CommonDataTypes.TEXT;
+    }
+
+    //These Two Methods goal is to turn kinda simple types to simple types
+    public static Object simplifyObject(Object o) {
+        if (o instanceof Boolean) {
+            return ((boolean) o) ? 1 : 0;
+        } else if (o instanceof UUID) {
+            return o.toString();
+        } else if (o.getClass().isEnum()) {
+            return ((Enum) o).name();
+        } else if (o.getClass() == char[].class) {
+            return String.valueOf(o);
+        }
+        return o;
     }
 
     public static Class<?> getFirstTypeParam(Field field) {
@@ -88,114 +82,41 @@ public class TOUtils {
         }
     }
 
-    public static DataType typeFor(Class<?> firstTypeParam) {
-        if (firstTypeParam == String.class || firstTypeParam == Boolean.class || firstTypeParam == boolean.class) {
-            return CommonDataTypes.TEXT;
-        } else {
-            return CommonDataTypes.INT;
-        }
-    }
-
-    public static <T> T buildItem(Class<?> type, T t, ResultSet r, me.kingtux.tuxjsql.core.Table table, ORMConnection connection) {
-        List<T> st = buildItems(type, t, r, table, connection);
-        if (st == null) return null;
-        return st.isEmpty() ? null : st.get(0);
-    }
-
-    public static <T> List<T> buildItems(Class<?> type, T t, ResultSet r, me.kingtux.tuxjsql.core.Table table, ORMConnection connection) {
-        List<T> items = new ArrayList<>();
-        try {
-            Column primaryColumn = table.getPrimaryColumn();
-            while (r.next()) {
-                T st = (T) type.getConstructor().newInstance();
-                Object o = r.getObject(primaryColumn.getName());
-                for (Field field : type.getDeclaredFields()) {
-                    if (field.getAnnotation(TableColumn.class) == null) continue;
-                    TableColumn tc = field.getAnnotation(TableColumn.class);
-                    field.setAccessible(true);
-                    if (isBasic(field.getType())) {
-                        Object value = r.getObject(tc.name().isEmpty() ? field.getName().toLowerCase() : tc.name());
-                        field.set(st, rebuiltObject(field.getType(), value));
-                    } else if (field.getType().isAssignableFrom(List.class)) {
-                        field.set(st, isBasic(getFirstTypeParam(field)) ? buildSimpleList(o, connection.getListTable(field), connection) : buildComplexList(o, connection.getListTable(field), field.getType().getConstructor().newInstance(), connection));
-                    } else {
-                        field.set(st, connection.getValue(field.getType().getConstructor().newInstance(), r.getInt(tc.name().isEmpty() ? field.getName().toLowerCase() : tc.name())));
-                    }
-                }
-                items.add(st);
-                //System.out.println("Item Found");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-        return items;
-    }
-
-    public static List<?> buildSimpleList(Object parentID, Table table, ORMConnection connection) {
-        ResultSet set = table.select(TuxJSQL.getBuilder().createWhere().start("parent", parentID));
-        List<Object> o = new ArrayList<>();
-        try {
-            while (set.next()) {
-                Dao<Object, Object> dao = connection.createDAO(new Object());
-                o.add(dao.findByID(set.getObject("member")));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return o;
-    }
-
-    public static <T> List<T> buildComplexList(Object parentID, Table table, T t, ORMConnection ormConnection) {
-        ResultSet set = table.select(TuxJSQL.getBuilder().createWhere().start("parent", parentID));
-        List<T> o = new ArrayList<>();
-        try {
-            while (set.next()) {
-                T item = null;
-                    Dao<Object, Object> dao = ormConnection.createDAO(t);
-                    item = (T) dao.findByID(set.getObject("member"));
-                o.add(item);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static Object rebuildObject(Class<?> type, Object o) {
+        if (type == Boolean.class || type == boolean.class) {
+            return ((int) o) == 1;
+        } else if (type == UUID.class) {
+            return UUID.fromString(((String) o));
+        } else if (type.isEnum()) {
+            return Enum.valueOf((Class<? extends Enum>) type, ((String) o));
+        } else if (type == char[].class) {
+            return ((String) o).toCharArray();
         }
         return o;
     }
 
-    public static Field getPrimaryKeyField(Table table, Class<?> c) {
-        for (Field field : c.getDeclaredFields()) {
-            if (field.getAnnotation(TableColumn.class) == null) continue;
-            TableColumn tc = field.getAnnotation(TableColumn.class);
-            String columnName = tc.name().isEmpty() ? field.getName().toLowerCase() : tc.name();
-            if (table.getPrimaryColumn().getName().equalsIgnoreCase(columnName)) {
-                return field;
-            }
+    public static Class<?> simpleClass(Class<?> type) {
+        if (type == Boolean.class || type == boolean.class) {
+            return int.class;
+        } else if (type == UUID.class) {
+            return String.class;
+        } else if (type.isEnum()) {
+            return String.class;
+        } else if (type == char[].class) {
+            return String.class;
         }
-        return null;
+        return type;
     }
 
+    public static String getFieldName(Field field) {
+        TableColumn column = field.getAnnotation(TableColumn.class);
+        return column.name().isEmpty() ? field.getName().toLowerCase() : column.name();
 
-    public static Object getPrimaryKeyValue(Table tb, Object o) {
-
-        Object o1 = null;
-        Field fi = getPrimaryKeyField(tb, o.getClass());
-        if(fi==null) return null;
-        fi.setAccessible(true);
-        try {
-            o1 = fi.get(o);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return o1;
     }
 
-    public static boolean containsFieldWithType(Class<?> c, Class<?> table) {
-        for (Field field : c.getDeclaredFields()) {
-            if (field.getType() == table) {
-                return true;
-            }
-        }
-        return false;
+    public static String getClassName(Class<?> type) {
+        DBTable table = type.getAnnotation(DBTable.class);
+        if (table == null) return null;
+        return table.name().isEmpty() ? type.getSimpleName().toLowerCase() : table.name();
     }
 }
