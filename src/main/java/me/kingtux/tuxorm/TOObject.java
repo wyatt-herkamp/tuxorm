@@ -1,5 +1,6 @@
 package me.kingtux.tuxorm;
 
+import me.kingtux.tuxjsql.core.Column;
 import me.kingtux.tuxjsql.core.Table;
 
 import java.lang.reflect.Field;
@@ -40,5 +41,9 @@ public class TOObject {
 
     public void setOtherObjects(Map<Field, Table> otherObjects) {
         this.otherObjects = otherObjects;
+    }
+
+    public Column getColumnForField(Field field) {
+        return table.getColumnByName(TOUtils.getFieldName(field));
     }
 }

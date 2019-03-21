@@ -8,16 +8,16 @@
     <artifactId>tuxorm</artifactId>
     <version>1.0.1-SNAPSHOT</version>
 
-    <distributionManagement>
-        <repository>
-            <id>kingtux-repo</id>
-            <url>https://repo.kingtux.me/repository/maven-releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>kingtux-repo</id>
-            <url>https://repo.kingtux.me/repository/maven-snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
+        <distributionManagement>
+            <repository>
+                <id>kingtux-repo</id>
+                <url>https://repo.kingtux.me/repository/maven-releases/</url>
+            </repository>
+            <snapshotRepository>
+                <id>kingtux-repo</id>
+                <url>https://repo.kingtux.me/repository/maven-snapshots/</url>
+            </snapshotRepository>
+        </distributionManagement>
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
         <plugins>
@@ -73,18 +73,24 @@
         <dependency>
             <groupId>me.kingtux</groupId>
             <artifactId>tuxjsql-core</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
         </dependency>
         <dependency>
             <groupId>me.kingtux</groupId>
             <artifactId>tuxjsql-mysql</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>me.kingtux</groupId>
             <artifactId>tuxjsql-sqlite</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.0.13</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

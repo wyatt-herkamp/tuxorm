@@ -12,7 +12,7 @@ public interface Dao<T, ID> {
      *
      * @param t the value
      */
-    void create(T t);
+    T create(T t);
 
     List<T> fetchAll();
 

@@ -1,8 +1,7 @@
 package me.kingtux.tuxorm.serializers;
 
-import me.kingtux.tuxjsql.core.WhereStatement;
-
-import java.util.List;
+import me.kingtux.tuxorm.TOObject;
+import me.kingtux.tuxorm.TOResult;
 
 public interface PrimarySerializer<T, ID> {
 
@@ -13,14 +12,9 @@ public interface PrimarySerializer<T, ID> {
 
     void update(T t);
 
-    /**
-     * The One code will get the primary ID
-     */
-    T fetch(ID id);
+    void build(TOResult toResult);
 
-
-    List<T> fetch(WhereStatement statement);
-
+    TOObject getTOObject();
     String getTableName();
 
     Class<?> getPrimaryKeyType();

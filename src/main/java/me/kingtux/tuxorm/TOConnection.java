@@ -5,6 +5,8 @@ import me.kingtux.tuxorm.serializers.PrimarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
 import me.kingtux.tuxorm.serializers.builtin.FileSerializer;
 import me.kingtux.tuxorm.serializers.builtin.ListSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.HashMap;
@@ -14,10 +16,9 @@ import java.util.Map;
 public class TOConnection {
     private Map<Class, PrimarySerializer> primarySerializers = new HashMap<>();
     private Map<Class<?>, SecondarySerializer> secondarySerializers = new HashMap<>();
-
     private DefaultSerializer defaultSerializer;
-
-    TOConnection() {
+    protected Logger logger = LoggerFactory.getLogger("TuxORM");
+    public TOConnection() {
         secondarySerializers.put(List.class, new ListSerializer(this));
         registerSecondarySerializer(File.class, new FileSerializer());
         defaultSerializer = new DefaultSerializer(this);
@@ -49,7 +50,7 @@ public class TOConnection {
     public <T, ID> Dao<T, ID> createDao(Class<T> type) {
         Dao<T, ID> dao;
         if (getPrimarySerializer(type) == null) {
-            dao = new DefaultSerializerDao<>();
+            dao = new DefaultSerializerDao<T,ID>(defaultSerializer.getToObject(type), defaultSerializer,this);
         } else {
             //Handle Later
             dao = null;
@@ -92,5 +93,9 @@ public class TOConnection {
             }
         }
         return null;
+    }
+
+    public Object quickInsert(Object value) {
+        return value;
     }
 }
