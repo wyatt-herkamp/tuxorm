@@ -15,6 +15,7 @@ public interface PrimarySerializer<T, ID> {
     void build(TOResult toResult);
 
     TOObject getTOObject();
+
     String getTableName();
 
     Class<?> getPrimaryKeyType();

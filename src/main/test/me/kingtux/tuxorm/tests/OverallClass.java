@@ -29,6 +29,10 @@ public class OverallClass {
     public OverallClass() {
     }
 
+    public void setValue(boolean value) {
+        this.value = value;
+    }
+
     public String getName() {
         return name;
     }
@@ -47,5 +51,15 @@ public class OverallClass {
 
     public void setLongs(List<Long> longs) {
         this.longs = longs;
+    }
+
+    @Override
+    public String toString() {
+        return "OverallClass{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", longs=" + longs +
+                ", value=" + value +
+                '}';
     }
 }

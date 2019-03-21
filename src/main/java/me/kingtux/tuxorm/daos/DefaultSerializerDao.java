@@ -89,11 +89,6 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
     }
 
     @Override
-    public void updateOrCreate(T t) {
-
-    }
-
-    @Override
     public String getTableName() {
         return toObject.getTable().getName();
     }
@@ -110,6 +105,6 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
 
     @Override
     public T refresh(T t) {
-        return t;
+        return findByID((ID) defaultSerializer.getPrimaryKey(t));
     }
 }

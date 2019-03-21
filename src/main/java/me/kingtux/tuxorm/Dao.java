@@ -28,7 +28,13 @@ public interface Dao<T, ID> {
 
     void deleteById(ID t);
 
-    void updateOrCreate(T t);
+    default void updateOrCreate(T t) {
+        if (getConnection().getPrimaryValue(t) == null) {
+            create(t);
+        }else{
+            update(t);
+        }
+    }
 
     String getTableName();
 
