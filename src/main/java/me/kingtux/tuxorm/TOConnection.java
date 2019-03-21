@@ -98,4 +98,8 @@ public class TOConnection {
     public Object quickInsert(Object value) {
         return value;
     }
+
+    public Logger getLogger() {
+        return logger;
+    }
 }

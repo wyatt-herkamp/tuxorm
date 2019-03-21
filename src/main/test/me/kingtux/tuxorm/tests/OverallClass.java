@@ -14,6 +14,8 @@ public class OverallClass {
     private String name;
     @TableColumn
     private List<Long> longs = Arrays.asList(1L, 2L, 3L);
+    @TableColumn
+    private boolean value = false;
 
     public OverallClass(String name) {
         this.name = name;
@@ -29,5 +31,21 @@ public class OverallClass {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String cool_guy) {
+        name = cool_guy;
+    }
+
+    public List<Long> getLongs() {
+        return longs;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setLongs(List<Long> longs) {
+        this.longs = longs;
     }
 }

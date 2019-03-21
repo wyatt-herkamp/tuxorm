@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DefaultSerializerDao<T, ID> implements Dao<T,ID> {
+public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
     private TOObject toObject;
     private DefaultSerializer defaultSerializer;
     private TOConnection connection;
@@ -31,12 +31,17 @@ public class DefaultSerializerDao<T, ID> implements Dao<T,ID> {
 
     @Override
     public void update(T t) {
+        if (t == null) {
+            throw new NullPointerException("You cant update null!");
+        }
         defaultSerializer.update(t, toObject);
     }
 
     @Override
     public T create(T t) {
-        return findByID((ID) defaultSerializer.create(t, toObject));
+        ID id = (ID) defaultSerializer.create(t, toObject);
+        connection.getLogger().debug(id.toString());
+        return findByID(id);
     }
 
     @Override
@@ -56,15 +61,11 @@ public class DefaultSerializerDao<T, ID> implements Dao<T,ID> {
             TableResult tr = new TableResult(row, toObject.getTable());
             Map<Field, TableResult> map = new HashMap<>();
             for (Map.Entry<Field, Table> entry : toObject.getOtherObjects().entrySet()) {
-                System.out.println("LOOP");
                 Object object = TOUtils.simplifyObject(tr.getRow().getRowItem(toObject.getTable().getPrimaryColumn().getName()).getAsObject());
-                System.out.println("Query");
                 DBResult result = entry.getValue().select(WhereStatement.create().start(TOUtils.PARENT_ID_NAME
                         , object));
-                System.out.println("QUery.");
                 TableResult subResult =
                         new TableResult(entry.getValue(), result);
-                System.out.println("Put");
                 map.put(entry.getKey(), subResult);
             }
             results.add(new TOResult(toObject.getType(), tr, map));
@@ -76,6 +77,7 @@ public class DefaultSerializerDao<T, ID> implements Dao<T,ID> {
         }
         return list;
     }
+
     @Override
     public void delete(T t) {
         defaultSerializer.delete(t, toObject);

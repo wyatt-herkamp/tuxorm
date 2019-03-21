@@ -1,6 +1,7 @@
 package me.kingtux.tuxorm;
 
 import me.kingtux.tuxjsql.core.*;
+import me.kingtux.tuxjsql.core.statements.WhereStatement;
 import me.kingtux.tuxorm.annotations.TableColumn;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
@@ -36,6 +37,9 @@ public final class DefaultSerializer {
 
     public void update(Object value, TOObject toObject) {
         Object primaryKeyValue = getPrimaryKey(value);
+        if(primaryKeyValue==null){
+            throw new RuntimeException("Hey unable to locate a primarykey for "+ value.getClass().getSimpleName());
+        }
         try {
             for (Map.Entry<Field, Table> extraTables : toObject.getOtherObjects().entrySet()) {
                 MultiSecondarySerializer mss = (MultiSecondarySerializer) toConnection.getSecondarySerializer(extraTables.getKey().getType());
@@ -124,7 +128,11 @@ public final class DefaultSerializer {
             if (!tc.primary()) continue;
             field.setAccessible(true);
             try {
-                field.get(object);
+              Object o =  field.get(object);
+              //if(o==null){
+              //    toConnection.getLogger().debug("PrimaryKey is Null");
+              //}
+              return o;
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
@@ -215,9 +223,10 @@ public final class DefaultSerializer {
 
     public void delete(Object value, TOObject toObject) {
         Object o = getPrimaryKey(value);
-        toObject.getTable().delete(o);
+        if(o==null) return;
+        toObject.getTable().delete(WhereStatement.create().start(toObject.getTable().getPrimaryColumn().getName(), o));
         toObject.getOtherObjects().forEach((field, table) -> {
-            table.delete(o);
+            table.delete(WhereStatement.create().start(PARENT_ID_NAME, o));
         });
     }
 

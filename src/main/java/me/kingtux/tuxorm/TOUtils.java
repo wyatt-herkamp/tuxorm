@@ -56,6 +56,9 @@ public class TOUtils {
 
     //These Two Methods goal is to turn kinda simple types to simple types
     public static Object simplifyObject(Object o) {
+        if (o == null) {
+            return null;
+        }
         if (o instanceof Boolean) {
             return ((boolean) o) ? 1 : 0;
         } else if (o instanceof UUID) {
