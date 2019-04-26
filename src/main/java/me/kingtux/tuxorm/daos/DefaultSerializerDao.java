@@ -39,6 +39,9 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
 
     @Override
     public T create(T t) {
+        if(t==null){
+            throw new NullPointerException("You can't insert null into db");
+        }
         ID id = (ID) defaultSerializer.create(t, toObject);
         connection.getLogger().debug(id.toString());
         return findByID(id);
@@ -51,7 +54,7 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
 
     @Override
     public List<T> fetch(String columnName, Object value) {
-        return fetch(TuxJSQL.getSQLBuilder().createWhere().start(columnName, TOUtils.simplifyObject(value)));
+        return fetch(connection.getBuilder().createWhere().start(columnName, TOUtils.simplifyObject(value)));
     }
 
     public List<T> fetch(WhereStatement statement) {
@@ -62,7 +65,7 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
             Map<Field, TableResult> map = new HashMap<>();
             for (Map.Entry<Field, Table> entry : toObject.getOtherObjects().entrySet()) {
                 Object object = TOUtils.simplifyObject(tr.getRow().getRowItem(toObject.getTable().getPrimaryColumn().getName()).getAsObject());
-                DBResult result = entry.getValue().select(WhereStatement.create().start(TOUtils.PARENT_ID_NAME
+                DBResult result = entry.getValue().select(connection.getBuilder().createWhere().start(TOUtils.PARENT_ID_NAME
                         , object));
                 TableResult subResult =
                         new TableResult(entry.getValue(), result);
@@ -80,6 +83,9 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
 
     @Override
     public void delete(T t) {
+        if(t==null){
+            throw new NullPointerException("You cant delete null");
+        }
         defaultSerializer.delete(t, toObject);
     }
 

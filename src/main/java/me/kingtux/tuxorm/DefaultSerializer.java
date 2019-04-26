@@ -1,7 +1,12 @@
 package me.kingtux.tuxorm;
 
-import me.kingtux.tuxjsql.core.*;
+import me.kingtux.tuxjsql.core.Column;
+import me.kingtux.tuxjsql.core.Table;
+import me.kingtux.tuxjsql.core.TuxJSQL;
+import me.kingtux.tuxjsql.core.builders.ColumnBuilder;
+import me.kingtux.tuxjsql.core.builders.SQLBuilder;
 import me.kingtux.tuxjsql.core.statements.WhereStatement;
+import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
@@ -141,11 +146,24 @@ public final class DefaultSerializer {
     }
 
     public void createTable(Class<?> tableClass) {
+        if(tableClass==null){
+            throw new IllegalArgumentException("the provided class is null");
+        }
+        if(tableClass.getAnnotation(DBTable.class)==null){
+            throw new IllegalArgumentException("Missing required @DBTable");
+        }
+        try {
+            tableClass.getConstructor().newInstance();
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new TOException("Unable to find public constructor!");
+        }
+        //Now get to work
         List<Column> columns = new ArrayList<>();
         Map<Field, Table> extraTables = new HashMap<>();
-        SQLBuilder builder = TuxJSQL.getSQLBuilder();
+        SQLBuilder builder = toConnection.getBuilder();
         String tName = TOUtils.getClassName(tableClass);
         for (Field field : tableClass.getDeclaredFields()) {
+            if(field.getAnnotation(TableColumn.class)==null)  continue;
             field.setAccessible(true);
             if (isAnyTypeBasic(field.getType())) {
                 columns.add(createColumn(field));
@@ -159,8 +177,6 @@ public final class DefaultSerializer {
                                 ((MultiSecondarySerializer) ss).createTable(TOUtils.getFieldName(field) + "_" + tName,
                                         field,
                                         TOUtils.getColumnType(TOUtils.simpleClass(getPrimaryKeyType(tableClass)))));
-                    } else {
-                        throw new RuntimeException("Something broke(I DONT CARE)(WILL HANDLE BETTER)");
                     }
                 } else {
                     ColumnBuilder cb = builder.createColumn();
@@ -171,13 +187,13 @@ public final class DefaultSerializer {
         }
         objects.put(tableClass, new TOObject(tableClass, builder.createTable(tName, columns).createIfNotExists(), extraTables));
         extraTables.forEach((field, table) -> {
-            table.createIfNotExists();
+            table.createUpdate();
         });
     }
 
     public Column createColumn(Field field) {
         TableColumn tableColumn  = field.getAnnotation(TableColumn.class);
-        return Column.create().name(TOUtils.getFieldName(field)).
+        return toConnection.getBuilder().createColumn().name(TOUtils.getFieldName(field)).
                 type(TOUtils.getColumnType(simpleClass(field.getType()))).primary(tableColumn.primary()).autoIncrement(tableColumn.autoIncrement()).build();
     }
 
@@ -224,9 +240,9 @@ public final class DefaultSerializer {
     public void delete(Object value, TOObject toObject) {
         Object o = getPrimaryKey(value);
         if(o==null) return;
-        toObject.getTable().delete(WhereStatement.create().start(toObject.getTable().getPrimaryColumn().getName(), o));
+        toObject.getTable().delete(toConnection.getBuilder().createWhere().start(toObject.getTable().getPrimaryColumn().getName(), o));
         toObject.getOtherObjects().forEach((field, table) -> {
-            table.delete(WhereStatement.create().start(PARENT_ID_NAME, o));
+            table.delete(toConnection.getBuilder().createWhere().start(PARENT_ID_NAME, o));
         });
     }
 

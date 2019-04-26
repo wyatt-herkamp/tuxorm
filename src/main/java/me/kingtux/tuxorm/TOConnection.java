@@ -1,8 +1,11 @@
 package me.kingtux.tuxorm;
 
+import me.kingtux.tuxjsql.core.builders.SQLBuilder;
 import me.kingtux.tuxorm.daos.DefaultSerializerDao;
+import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.PrimarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
+import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 import me.kingtux.tuxorm.serializers.builtin.FileSerializer;
 import me.kingtux.tuxorm.serializers.builtin.ListSerializer;
 import org.slf4j.Logger;
@@ -14,14 +17,21 @@ import java.util.List;
 import java.util.Map;
 
 public class TOConnection {
+    private SQLBuilder builder;
     private Map<Class, PrimarySerializer> primarySerializers = new HashMap<>();
     private Map<Class<?>, SecondarySerializer> secondarySerializers = new HashMap<>();
     private DefaultSerializer defaultSerializer;
     protected Logger logger = LoggerFactory.getLogger("TuxORM");
-    public TOConnection() {
+
+    public TOConnection(SQLBuilder builder) {
         secondarySerializers.put(List.class, new ListSerializer(this));
         registerSecondarySerializer(File.class, new FileSerializer());
         defaultSerializer = new DefaultSerializer(this);
+        this.builder = builder;
+    }
+
+    public SQLBuilder getBuilder() {
+        return builder;
     }
 
     public Class<?> getPrimaryType(Class<?> firstType) {
@@ -48,6 +58,7 @@ public class TOConnection {
     }
 
     public <T, ID> Dao<T, ID> createDao(Class<T> type) {
+        registerClass(type);
         Dao<T, ID> dao;
         if (getPrimarySerializer(type) == null) {
             dao = new DefaultSerializerDao<T,ID>(defaultSerializer.getToObject(type), defaultSerializer,this);
@@ -57,6 +68,11 @@ public class TOConnection {
         }
         return dao;
     }
+
+    public <T, ID> Dao<T, ID> createDao(T type) {
+        return (Dao<T, ID>) createDao(type.getClass());
+    }
+
 
     public void registerClass(Class<?> type) {
         if (getPrimarySerializer(type) == null) {
@@ -76,6 +92,10 @@ public class TOConnection {
     }
 
     public void registerSecondarySerializer(Class<?> type, SecondarySerializer secondarySerializer) {
+        if (!(secondarySerializer instanceof SingleSecondarySerializer) && !(secondarySerializer instanceof MultiSecondarySerializer)) {
+            logger.error("Failed To Register SecondarySerializer", new IllegalArgumentException(secondarySerializers.getClass().getName() + " Must be an instance of  a SingleSecondarySerializer  or MultiSecondarySerializer"));
+            return;
+        }
         Map.Entry<Class<?>, SecondarySerializer> entry = null;
         for (Map.Entry<Class<?>, SecondarySerializer> ecp : secondarySerializers.entrySet()) {
             if (type.isAssignableFrom(ecp.getKey())) {
