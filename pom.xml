@@ -50,7 +50,7 @@
                 </executions>
                 <configuration>
                     <serverId>kingtux-repo</serverId>
-                    <nexusUrl>https://repo.kingtux.me/repository/maven-releases/</nexusUrl>
+                    <nexusUrl>https://repo.kingtux.me/repository/maven-public/</nexusUrl>
                     <skipStaging>true</skipStaging>
                 </configuration>
             </plugin>
