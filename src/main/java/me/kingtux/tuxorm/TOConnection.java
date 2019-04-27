@@ -16,16 +16,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The core class to TuxORM.
+ * This allows you to register classes, registerSerializers, and createDaos
+ */
 public class TOConnection {
     private SQLBuilder builder;
     private Map<Class, PrimarySerializer> primarySerializers = new HashMap<>();
     private Map<Class<?>, SecondarySerializer> secondarySerializers = new HashMap<>();
     private DefaultSerializer defaultSerializer;
-    protected Logger logger = LoggerFactory.getLogger("TuxORM");
+    public static final Logger logger = LoggerFactory.getLogger("TuxORM");
 
+    /**
+     * Main constructor for TuxORM.
+     * We need a TuxJSQL SQLBuilder.
+     * <a href="https://github.com/wherkamp/tuxjsql/wiki/Creating-your-first-TuxJSQL-SQLBuilder">Tutorial on creating a SQLBuilder. </a>
+     *
+     * @param builder a TuxJSQL SQLBuilder
+     */
     public TOConnection(SQLBuilder builder) {
-        secondarySerializers.put(List.class, new ListSerializer(this));
-        registerSecondarySerializer(File.class, new FileSerializer());
+        registerSecondarySerializer(List.class, new ListSerializer(this));
+        registerSecondarySerializer(File.class, new FileSerializer(this));
         defaultSerializer = new DefaultSerializer(this);
         this.builder = builder;
     }
@@ -52,28 +63,44 @@ public class TOConnection {
         return defaultSerializer.getPrimaryKey(object);
     }
 
-    public <T> Object quickGet(Class<T> type, Object id) {
-        Dao<T, Object> dao = createDao(type);
-        return dao.findByID(id);
-    }
-
+    /**
+     * Creates a dao from the class provided.
+     *
+     * @param type the class for the dao you want.
+     * @param <T>  the type
+     * @param <ID> the ID type
+     * @return the Dao
+     * @see Dao
+     */
     public <T, ID> Dao<T, ID> createDao(Class<T> type) {
         registerClass(type);
         Dao<T, ID> dao;
         if (getPrimarySerializer(type) == null) {
             dao = new DefaultSerializerDao<T,ID>(defaultSerializer.getToObject(type), defaultSerializer,this);
         } else {
-            //Handle Later
+            //TODO add support for customSerializer Daos
             dao = null;
         }
         return dao;
     }
 
+    /***
+     * This creates a dao for you.
+     * @see Dao
+     * @param type The Table
+     * @param <T> Your Class Type
+     * @param <ID> the ID type
+     * @return the dao
+     */
     public <T, ID> Dao<T, ID> createDao(T type) {
         return (Dao<T, ID>) createDao(type.getClass());
     }
 
-
+    /**
+     * Register the class and creates the tables needed.
+     *
+     * @param type The class of what you need.
+     */
     public void registerClass(Class<?> type) {
         if (getPrimarySerializer(type) == null) {
             defaultSerializer.createTable(type);
@@ -115,8 +142,14 @@ public class TOConnection {
         return null;
     }
 
-    public Object quickInsert(Object value) {
-        return value;
+    Object quickInsert(Object value) {
+        Dao<Object, Object> dao = createDao(value);
+        return dao.create(value);
+    }
+
+    public <T> Object quickGet(Class<T> type, Object id) {
+        Dao<T, Object> dao = createDao(type);
+        return dao.findByID(id);
     }
 
     public Logger getLogger() {

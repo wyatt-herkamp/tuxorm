@@ -2,10 +2,8 @@ package me.kingtux.tuxorm;
 
 import me.kingtux.tuxjsql.core.Column;
 import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.TuxJSQL;
 import me.kingtux.tuxjsql.core.builders.ColumnBuilder;
 import me.kingtux.tuxjsql.core.builders.SQLBuilder;
-import me.kingtux.tuxjsql.core.statements.WhereStatement;
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
@@ -63,9 +61,9 @@ public final class DefaultSerializer {
                         update.put(toObject.getColumnForField(field), ((SingleSecondarySerializer) serializer).getSimplifiedValue(field.get(value)));
                     }
                 } else {
-                    Object pkey = toConnection.getPrimaryValue(value);
+                    Object pkey = toConnection.getPrimaryValue(field.get(value));
                     if (pkey == null) {
-                        pkey = toConnection.quickInsert(value);
+                        pkey = toConnection.quickInsert(field.get(value));
                     }
                     update.put(toObject.getColumnForField(field), pkey);
                 }
@@ -194,7 +192,7 @@ public final class DefaultSerializer {
     public Column createColumn(Field field) {
         TableColumn tableColumn  = field.getAnnotation(TableColumn.class);
         return toConnection.getBuilder().createColumn().name(TOUtils.getFieldName(field)).
-                type(TOUtils.getColumnType(simpleClass(field.getType()))).primary(tableColumn.primary()).autoIncrement(tableColumn.autoIncrement()).build();
+                type(TOUtils.getColumnType(simpleClass(field.getType()))).primary(tableColumn.primary()).autoIncrement(tableColumn.autoIncrement()).notNull(tableColumn.notNull()).build();
     }
 
     public <T> T build(Class<?> item, TOResult toResult, TOObject object) {

@@ -1,43 +1,31 @@
 # TuxORM
+TuxORM is a simple to use orm. That uses a [Dao](https://en.wikipedia.org/wiki/Data_access_object). 
+I wrote this with the database tool [TuxJSQL](https://github.com/wherkamp/tuxjsql). I use a lot of magical code. 
 
+# Before use!
+Read [this](https://github.com/wherkamp/tuxjsql/wiki/Creating-your-first-TuxJSQL-SQLBuilder)
 
-I built an ORM
-
-![cried 37](https://i.kingtux.me/embed/56LPGk)
+# How to use 
+Read [this](https://github.com/wherkamp/tuxorm/wiki/How-to-use-TuxORM)
 
 ## Maven
 ```xml
    <repository>
       <id>kingtux-repo</id>
-      <url>http://repo.kingtux.me/repository/maven-public/</url>
+      <url>https://repo.kingtux.me/repository/maven-public/</url>
     </repository>
-       <dependency>
-         <groupId>me.kingtux</groupId>
-         <artifactId>tc-common</artifactId>
-         <!---Make sure you use Latest Version!-->
-         <version>1.0-SNAPSHOT</version>
-         <scope>compile</scope>
-       </dependency>
+    <dependency>
+       <groupId>me.kingtux</groupId>
+       <artifactId>tuxorm</artifactId>
+       <version>1.0-SNAPSHOT</version>   
+    </dependency>
 ```
 ## Gradle
 ```
 repositories {
-  maven { url 'http://repo.kingtux.me/repository/maven-public/' }
+  maven { url 'https://repo.kingtux.me/repository/maven-public/' }
 }
 dependencies {
-   compile "me.kingtux:tc-common:1.0"
+   compile "me.kingtux:tuxorm:1.0-SNAPSHOT"
 }
-```
-One of these depends must be added!
-```xml
-        <dependency>
-            <groupId>me.kingtux</groupId>
-            <artifactId>tuxjsql-mysql</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>me.kingtux</groupId>
-            <artifactId>tuxjsql-sqlite</artifactId>
-            <version>1.0</version>
-        </dependency>
 ```
