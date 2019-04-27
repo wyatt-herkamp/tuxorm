@@ -20,7 +20,7 @@ Read [this](https://github.com/wherkamp/tuxorm/wiki/How-to-use-TuxORM)
     <dependency>
        <groupId>me.kingtux</groupId>
        <artifactId>tuxorm</artifactId>
-       <version>1.0-SNAPSHOT</version>   
+       <version>1.0</version>   
     </dependency>
 ```
 ## Gradle
@@ -29,6 +29,6 @@ repositories {
   maven { url 'https://repo.kingtux.me/repository/maven-public/' }
 }
 dependencies {
-   compile "me.kingtux:tuxorm:1.0-SNAPSHOT"
+   compile "me.kingtux:tuxorm:1.0"
 }
 ```
