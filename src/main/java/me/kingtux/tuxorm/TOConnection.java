@@ -2,6 +2,7 @@ package me.kingtux.tuxorm;
 
 import me.kingtux.tuxjsql.core.builders.SQLBuilder;
 import me.kingtux.tuxorm.daos.DefaultSerializerDao;
+import me.kingtux.tuxorm.daos.PrimarySerializerDao;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.PrimarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
@@ -22,8 +23,8 @@ import java.util.Map;
  */
 public class TOConnection {
     private SQLBuilder builder;
-    private Map<Class, PrimarySerializer> primarySerializers = new HashMap<>();
-    private Map<Class<?>, SecondarySerializer> secondarySerializers = new HashMap<>();
+    Map<Class, PrimarySerializer> primarySerializers = new HashMap<>();
+    Map<Class<?>, SecondarySerializer> secondarySerializers = new HashMap<>();
     private DefaultSerializer defaultSerializer;
     public static final Logger logger = LoggerFactory.getLogger("TuxORM");
 
@@ -79,7 +80,7 @@ public class TOConnection {
             dao = new DefaultSerializerDao<T,ID>(defaultSerializer.getToObject(type), defaultSerializer,this);
         } else {
             //TODO add support for customSerializer Daos
-            dao = null;
+            dao = new PrimarySerializerDao(type, getPrimarySerializer(type), this);
         }
         return dao;
     }
@@ -102,6 +103,7 @@ public class TOConnection {
      * @param type The class of what you need.
      */
     public void registerClass(Class<?> type) {
+        logger.debug("Registering class " + type.getSimpleName());
         if (getPrimarySerializer(type) == null) {
             defaultSerializer.createTable(type);
         } else {
@@ -142,15 +144,6 @@ public class TOConnection {
         return null;
     }
 
-    Object quickInsert(Object value) {
-        Dao<Object, Object> dao = createDao(value);
-        return dao.create(value);
-    }
-
-    public <T> Object quickGet(Class<T> type, Object id) {
-        Dao<T, Object> dao = createDao(type);
-        return dao.findByID(id);
-    }
 
     public Logger getLogger() {
         return logger;

@@ -11,6 +11,7 @@ public interface Dao<T, ID> {
      * Inserts the item into the system.
      *
      * @param t the value
+     * @return a recreation of the object you just sent.
      */
     T create(T t);
 

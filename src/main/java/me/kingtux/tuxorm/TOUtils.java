@@ -85,6 +85,16 @@ public class TOUtils {
         }
     }
 
+    public static Object quickInsert(Object value, TOConnection connection) {
+        Dao<Object, Object> dao = connection.createDao(value);
+        return dao.create(value);
+    }
+
+    public static <T> Object quickGet(Class<T> type, Object id, TOConnection connection) {
+        Dao<T, Object> dao = connection.createDao(type);
+        return dao.findByID(id);
+    }
+
     @SuppressWarnings("unchecked")
     public static Object rebuildObject(Class<?> type, Object o) {
         if (type == Boolean.class || type == boolean.class) {

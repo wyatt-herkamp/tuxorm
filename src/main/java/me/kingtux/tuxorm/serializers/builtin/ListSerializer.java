@@ -1,6 +1,8 @@
 package me.kingtux.tuxorm.serializers.builtin;
 
-import me.kingtux.tuxjsql.core.*;
+import me.kingtux.tuxjsql.core.CommonDataTypes;
+import me.kingtux.tuxjsql.core.DataType;
+import me.kingtux.tuxjsql.core.Table;
 import me.kingtux.tuxjsql.core.builders.SQLBuilder;
 import me.kingtux.tuxjsql.core.builders.TableBuilder;
 import me.kingtux.tuxjsql.core.result.DBResult;
@@ -56,7 +58,7 @@ public class ListSerializer implements MultiSecondarySerializer<List<?>> {
                 }
             } else {
             for (DBRow row : set) {
-                value.add(connection.quickGet(field.getType(), row.getRowItem("child").getAsObject()));
+                value.add(TOUtils.quickGet(field.getType(), row.getRowItem("child").getAsObject(), connection));
                 }
             }
 

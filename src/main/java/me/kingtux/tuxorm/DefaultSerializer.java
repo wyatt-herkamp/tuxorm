@@ -63,7 +63,7 @@ public final class DefaultSerializer {
                 } else {
                     Object pkey = toConnection.getPrimaryValue(field.get(value));
                     if (pkey == null) {
-                        pkey = toConnection.quickInsert(field.get(value));
+                        pkey = TOUtils.quickInsert(field.get(value), toConnection);
                     }
                     update.put(toObject.getColumnForField(field), pkey);
                 }
@@ -104,7 +104,7 @@ public final class DefaultSerializer {
                 } else {
                     Object pkey = toConnection.getPrimaryValue(value);
                     if (pkey == null) {
-                        pkey = toConnection.quickInsert(value);
+                        pkey = TOUtils.quickInsert(value, toConnection);
                     }
                     insert.put(toObject.getColumnForField(field), pkey);
                 }
@@ -219,7 +219,7 @@ public final class DefaultSerializer {
                         field.set(t, ((SingleSecondarySerializer) serializer).buildFromSimplifiedValue(value));
                     }
                 } else {
-                    field.set(t, toConnection.quickGet(field.getType(), value));
+                    field.set(t, TOUtils.quickGet(field.getType(), value, toConnection));
                 }
             }
             return t;
