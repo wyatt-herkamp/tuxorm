@@ -5,7 +5,6 @@ import me.kingtux.tuxorm.TOResult;
 
 public interface PrimarySerializer<T, ID> {
 
-
     ID insert(T t);
 
     void delete(T t);
@@ -20,7 +19,8 @@ public interface PrimarySerializer<T, ID> {
 
     Class<?> getPrimaryKeyType();
 
-    Object getPrimaryKey(T object);
-
     void createTable();
+
+    Object getPrimaryKey(Object object);
+
 }

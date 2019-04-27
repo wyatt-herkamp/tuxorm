@@ -4,6 +4,7 @@ import me.kingtux.tuxjsql.core.DataType;
 import me.kingtux.tuxjsql.core.Table;
 import me.kingtux.tuxjsql.core.TuxJSQL;
 import me.kingtux.tuxjsql.core.result.DBResult;
+import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.TOUtils;
 
 import java.lang.reflect.Field;
@@ -19,8 +20,10 @@ public interface MultiSecondarySerializer<T> extends SecondarySerializer<T> {
 
     Table createTable(String name, Field field, DataType parentDataType);
 
+
     default void delete(Object parentID, Field field, Table table){
-        table.delete(TuxJSQL.getSQLBuilder().createWhere().start(TOUtils.PARENT_ID_NAME, TOUtils.simplifyObject(parentID)));
+        table.delete(getConnection().getBuilder().createWhere().start(TOUtils.PARENT_ID_NAME, TOUtils.simplifyObject(parentID)));
     }
 
+    TOConnection getConnection();
 }

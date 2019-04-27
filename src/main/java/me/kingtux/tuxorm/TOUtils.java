@@ -75,7 +75,7 @@ public class TOUtils {
         if (field.getGenericType() instanceof ParameterizedType) {
             ParameterizedType ptype = (ParameterizedType) field.getGenericType();
             try {
-                return Class.forName(ptype.getActualTypeArguments()[0].toString().replace("class ", ""));
+                return Class.forName(ptype.getActualTypeArguments()[0].toString().replace("class ", "").replace("interface ", ""));
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 return null;
@@ -85,6 +85,17 @@ public class TOUtils {
         }
     }
 
+    public static Object quickInsert(Object value, TOConnection connection) {
+        Dao<Object, Object> dao = connection.createDao(value);
+        return dao.create(value);
+    }
+
+    public static <T> Object quickGet(Class<T> type, Object id, TOConnection connection) {
+        Dao<T, Object> dao = connection.createDao(type);
+        return dao.findByID(id);
+    }
+
+    @SuppressWarnings("unchecked")
     public static Object rebuildObject(Class<?> type, Object o) {
         if (type == Boolean.class || type == boolean.class) {
             return ((int) o) == 1;

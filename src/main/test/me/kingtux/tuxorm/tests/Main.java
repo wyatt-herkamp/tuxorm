@@ -16,26 +16,23 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         Properties properties = new Properties();
-        String path = System.getProperty("user.home") + "/mysql.properties";
-        System.out.println("Path to mysql settings: " + path);
-        properties.load(new FileInputStream(new File(path)));
-        TuxJSQL.setBuilder(TuxJSQL.Type.MYSQL);
-        TuxJSQL.setDatasource(properties);
-        //TuxJSQL.setBuilder(TuxJSQL.Type.SQLITE);
-        //Properties properties = new Properties();
-        //properties.setProperty("file", "db.db");
+        properties.setProperty("db.type", "SQLITE");
+        properties.setProperty("db.file", "db.db");
         //TuxJSQL.setDatasource(properties);
-        connection = new TOConnection();
+        connection = new TOConnection(TuxJSQL.setup(properties));
         connection.registerClass(OverallClass.class);
+
         Dao<OverallClass, Integer> dao = connection.createDao(OverallClass.class);
-        OverallClass clazz = dao.fetchFirst("value", true);
-        //clazz = dao.create(clazz);
-        //System.out.println(clazz.toString());
-        //clazz.setName("Cool Guy");
-        //clazz.setLongs(Arrays.asList(3L, 6L, 8L, 9L));
-        //dao.update(clazz);
+        OverallClass clazz = new OverallClass("Welcome");
+        clazz = dao.create(clazz);
         System.out.println(clazz.toString());
-       // dao.delete(clazz);
+        clazz.setName("Cool Guy");
+        clazz.setLongs(Arrays.asList(3L, 6L, 8L, 9L));
+        dao.update(clazz);
+        System.out.println(clazz.toString());
+        clazz = dao.fetchFirst("name", "Cool Guy");
+       System.out.println(clazz.toString());
+        dao.delete(clazz);
     }
 
 }
