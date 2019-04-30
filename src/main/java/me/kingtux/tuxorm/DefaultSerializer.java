@@ -102,9 +102,9 @@ public final class DefaultSerializer {
                         insert.put(toObject.getColumnForField(field), ((SingleSecondarySerializer) serializer).getSimplifiedValue(field.get(value)));
                     }
                 } else {
-                    Object pkey = toConnection.getPrimaryValue(value);
+                    Object pkey = toConnection.getPrimaryValue(field.get(value));
                     if (pkey == null) {
-                        pkey = TOUtils.quickInsert(value, toConnection);
+                        pkey = toConnection.getPrimaryValue(TOUtils.quickInsert(field.get(value), toConnection));
                     }
                     insert.put(toObject.getColumnForField(field), pkey);
                 }
