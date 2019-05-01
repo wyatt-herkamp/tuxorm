@@ -183,7 +183,7 @@ public final class DefaultSerializer {
                 }
             }
         }
-        objects.put(tableClass, new TOObject(tableClass, builder.createTable(tName, columns).createIfNotExists(), extraTables));
+        objects.put(tableClass, new TOObject(tableClass, builder.createTable(tName, columns).createUpdate(), extraTables));
         extraTables.forEach((field, table) -> {
             table.createUpdate();
         });
