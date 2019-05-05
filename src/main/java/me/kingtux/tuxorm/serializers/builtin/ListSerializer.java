@@ -45,7 +45,7 @@ public class ListSerializer implements MultiSecondarySerializer<List<?>> {
                     if (ss instanceof SingleSecondarySerializer) {
                         table.insertAll(parentID, ((SingleSecondarySerializer) ss).getSimplifiedValue(object));
                     } else if (ss instanceof SubMSSCompatible) {
-                        Map<Column, Object> o = ((SubMSSCompatible) ss).getValues(object);
+                        Map<Column, Object> o = ((SubMSSCompatible) ss).getValues(object, table);
                         o.put(table.getColumnByName(PARENT_ID_NAME), parentID);
                         table.insert(o);
                     }
@@ -97,13 +97,15 @@ public class ListSerializer implements MultiSecondarySerializer<List<?>> {
         } else if (ss instanceof SingleSecondarySerializer) {
             tableBuilder.addColumn(((SingleSecondarySerializer) ss).createColumn("child"));
         } else if (ss instanceof MultiSecondarySerializer) {
-            throw  new IllegalArgumentException("At the moment TuxORM doesnt support MM inside a MM");
-        } else if (ss instanceof SubMSSCompatible) {
-            SubMSSCompatible smss = ((SubMSSCompatible) ss);
-            for (Object c : smss.getColumns()) {
-                tableBuilder.addColumn((Column) c);
-            }
+            if (ss instanceof SubMSSCompatible) {
+                SubMSSCompatible smss = ((SubMSSCompatible) ss);
+                for (Object c : smss.getColumns()) {
+                    tableBuilder.addColumn((Column) c);
 
+                }
+            } else {
+                throw new IllegalArgumentException("At the moment TuxORM doesnt support MM inside a MM");
+            }
         } else {
             tableBuilder.addColumn(builder.createColumn().name("child").type(TOUtils.getColumnType(connection.getPrimaryType(firstType))).build());
         }

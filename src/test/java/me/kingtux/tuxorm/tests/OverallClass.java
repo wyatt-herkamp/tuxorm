@@ -5,7 +5,9 @@ import me.kingtux.tuxorm.annotations.TableColumn;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @DBTable
 public class OverallClass {
@@ -25,6 +27,8 @@ public class OverallClass {
     private boolean value = false;
     @TableColumn
     private File file = new File("test.txt");
+    @TableColumn
+    private Map<Integer, String> item = new HashMap<>();
     public OverallClass(String name) {
         this.name = name;
     }
@@ -36,6 +40,10 @@ public class OverallClass {
     }
 
     public OverallClass() {
+    }
+
+    public String put(Integer integer, String s) {
+        return item.put(integer, s);
     }
 
     public void setValue(boolean value) {

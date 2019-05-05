@@ -9,6 +9,7 @@ import me.kingtux.tuxorm.serializers.SecondarySerializer;
 import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 import me.kingtux.tuxorm.serializers.builtin.FileSerializer;
 import me.kingtux.tuxorm.serializers.builtin.ListSerializer;
+import me.kingtux.tuxorm.serializers.builtin.MapSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ public class TOConnection {
     public TOConnection(SQLBuilder builder) {
         registerSecondarySerializer(List.class, new ListSerializer(this));
         registerSecondarySerializer(File.class, new FileSerializer(this));
+        registerSecondarySerializer(Map.class, new MapSerializer(this));
         defaultSerializer = new DefaultSerializer(this);
         this.builder = builder;
     }

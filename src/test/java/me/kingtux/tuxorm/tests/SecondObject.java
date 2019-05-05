@@ -3,6 +3,9 @@ package me.kingtux.tuxorm.tests;
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 
+import java.util.Arrays;
+import java.util.List;
+
 @DBTable
 public class SecondObject  {
     @TableColumn(autoIncrement = true, primary = true)
@@ -13,6 +16,8 @@ public class SecondObject  {
     private long updatedLast = System.currentTimeMillis();
     @TableColumn
     private String name;
+    @TableColumn
+    private List<Item> is = Arrays.asList(new Item("1",1), new Item("2", 2));
 
     public SecondObject() {
     }

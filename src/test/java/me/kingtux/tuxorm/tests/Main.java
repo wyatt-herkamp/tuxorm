@@ -18,11 +18,13 @@ public class Main {
         properties.setProperty("db.file", "db.db");
         //TuxJSQL.setDatasource(properties);
         connection = new TOConnection(TuxJSQL.setup(properties));
+        connection.registerSecondarySerializer(Item.class,new TestSubMMS(connection));
         connection.registerClass(OverallClass.class);
 
         Dao<SecondObject, Long> sdao = connection.createDao(SecondObject.class);
         Dao<OverallClass, Long> dao = connection.createDao(OverallClass.class);
         OverallClass clazz = new OverallClass("Welcome",  new SecondObject("COOL MAN"), Arrays.asList(4L, 6L));
+        clazz.put(15,"GAY");
         clazz = dao.create(clazz);
         System.out.println(clazz.toString());
         clazz.setName("Cool Guy");

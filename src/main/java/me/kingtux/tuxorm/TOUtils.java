@@ -72,10 +72,16 @@ public class TOUtils {
     }
 
     public static Class<?> getFirstTypeParam(Field field) {
+        return getTypeParamAt(field, 0);
+    }
+
+
+    public static Class<?> getTypeParamAt(Field field, int i) {
         if (field.getGenericType() instanceof ParameterizedType) {
             ParameterizedType ptype = (ParameterizedType) field.getGenericType();
             try {
-                return Class.forName(ptype.getActualTypeArguments()[0].toString().replace("class ", "").replace("interface ", ""));
+                return Class.forName(ptype.getActualTypeArguments()[i].
+                        toString().replace("class ", "").replace("interface ", ""));
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 return null;
