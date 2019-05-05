@@ -1,5 +1,6 @@
 package me.kingtux.tuxorm.serializers.builtin;
 
+import me.kingtux.tuxjsql.core.Column;
 import me.kingtux.tuxjsql.core.CommonDataTypes;
 import me.kingtux.tuxjsql.core.DataType;
 import me.kingtux.tuxjsql.core.Table;
@@ -12,10 +13,12 @@ import me.kingtux.tuxorm.TOUtils;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
 import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
+import me.kingtux.tuxorm.serializers.SubMSSCompatible;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static me.kingtux.tuxorm.TOUtils.*;
 
@@ -41,6 +44,10 @@ public class ListSerializer implements MultiSecondarySerializer<List<?>> {
                 } else {
                     if (ss instanceof SingleSecondarySerializer) {
                         table.insertAll(parentID, ((SingleSecondarySerializer) ss).getSimplifiedValue(object));
+                    } else if (ss instanceof SubMSSCompatible) {
+                        Map<Column, Object> o = ((SubMSSCompatible) ss).getValues(object);
+                        o.put(table.getColumnByName(PARENT_ID_NAME), parentID);
+                        table.insert(o);
                     }
                 }
             }
@@ -56,12 +63,23 @@ public class ListSerializer implements MultiSecondarySerializer<List<?>> {
             for (DBRow row : set) {
                 value.add(TOUtils.rebuildObject(TOUtils.getFirstTypeParam(field), row.getRowItem("child").getAsObject()));
                 }
-            } else {
-            for (DBRow row : set) {
-                value.add(TOUtils.quickGet(field.getType(), row.getRowItem("child").getAsObject(), connection));
+        } else if (connection.getSecondarySerializer(firstType) != null) {
+            SecondarySerializer secondarySerializer = connection.getSecondarySerializer(firstType);
+            if (secondarySerializer instanceof SingleSecondarySerializer) {
+                for (DBRow row : set) {
+                    value.add(((SingleSecondarySerializer) secondarySerializer).buildFromSimplifiedValue(row.getRowItem("child").getAsObject()));
+                }
+            } else if (secondarySerializer instanceof SubMSSCompatible) {
+                SubMSSCompatible mssCompatible = (SubMSSCompatible) secondarySerializer;
+                for (DBRow row : set) {
+                    value.add(mssCompatible.minorBuild(row));
                 }
             }
-
+        } else {
+            for (DBRow row : set) {
+                value.add(TOUtils.quickGet(field.getType(), row.getRowItem("child").getAsObject(), connection));
+            }
+        }
         return value;
     }
 
@@ -80,11 +98,18 @@ public class ListSerializer implements MultiSecondarySerializer<List<?>> {
             tableBuilder.addColumn(((SingleSecondarySerializer) ss).createColumn("child"));
         } else if (ss instanceof MultiSecondarySerializer) {
             throw  new IllegalArgumentException("At the moment TuxORM doesnt support MM inside a MM");
+        } else if (ss instanceof SubMSSCompatible) {
+            SubMSSCompatible smss = ((SubMSSCompatible) ss);
+            for (Object c : smss.getColumns()) {
+                tableBuilder.addColumn((Column) c);
+            }
+
         } else {
             tableBuilder.addColumn(builder.createColumn().name("child").type(TOUtils.getColumnType(connection.getPrimaryType(firstType))).build());
         }
         return tableBuilder.build();
     }
+
 
     @Override
     public TOConnection getConnection() {

@@ -23,4 +23,6 @@ public interface PrimarySerializer<T, ID> {
 
     Object getPrimaryKey(Object object);
 
+
+
 }

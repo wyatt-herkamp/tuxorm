@@ -2,7 +2,6 @@ package me.kingtux.tuxorm.serializers;
 
 import me.kingtux.tuxjsql.core.DataType;
 import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.TuxJSQL;
 import me.kingtux.tuxjsql.core.result.DBResult;
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.TOUtils;
@@ -24,6 +23,8 @@ public interface MultiSecondarySerializer<T> extends SecondarySerializer<T> {
     default void delete(Object parentID, Field field, Table table){
         table.delete(getConnection().getBuilder().createWhere().start(TOUtils.PARENT_ID_NAME, TOUtils.simplifyObject(parentID)));
     }
+
+
 
     TOConnection getConnection();
 }
