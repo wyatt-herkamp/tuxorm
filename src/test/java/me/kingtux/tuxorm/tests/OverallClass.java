@@ -8,10 +8,16 @@ import java.util.List;
 
 @DBTable
 public class OverallClass {
-    @TableColumn(primary = true, autoIncrement = true)
-    private int id;
+    @TableColumn(autoIncrement = true, primary = true)
+    private long id;
     @TableColumn
-    private String name;
+    private long createdOn = System.currentTimeMillis();
+    @TableColumn
+    private long updatedLast = System.currentTimeMillis();
+    @TableColumn(useDefault = true)
+    private String name = "GAY";
+    @TableColumn
+    private SecondObject object;
     @TableColumn
     private List<Long> longs = Arrays.asList(1L, 2L, 3L);
     @TableColumn
@@ -21,8 +27,9 @@ public class OverallClass {
         this.name = name;
     }
 
-    public OverallClass(String name, List<Long> longs) {
+    public OverallClass(String name, SecondObject object, List<Long> longs) {
         this.name = name;
+        this.object = object;
         this.longs = longs;
     }
 
@@ -43,10 +50,6 @@ public class OverallClass {
 
     public List<Long> getLongs() {
         return longs;
-    }
-
-    public int getId() {
-        return id;
     }
 
     public void setLongs(List<Long> longs) {

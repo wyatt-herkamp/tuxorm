@@ -47,4 +47,11 @@ public @interface TableColumn {
      * @return if primary
      */
     boolean primary() default false;
+
+    /**
+     * if this is set to true. We are going to set the default for items based on what its set to by default. Via inline set or default constructor
+     *
+     * @return is default
+     */
+    boolean useDefault() default false;
 }

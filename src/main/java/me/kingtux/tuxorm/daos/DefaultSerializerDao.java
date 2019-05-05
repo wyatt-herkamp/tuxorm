@@ -1,7 +1,6 @@
 package me.kingtux.tuxorm.daos;
 
 import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.TuxJSQL;
 import me.kingtux.tuxjsql.core.result.DBResult;
 import me.kingtux.tuxjsql.core.result.DBRow;
 import me.kingtux.tuxjsql.core.statements.WhereStatement;
@@ -54,7 +53,15 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
 
     @Override
     public List<T> fetch(String columnName, Object value) {
-        return fetch(connection.getBuilder().createWhere().start(columnName, TOUtils.simplifyObject(value)));
+        if (columnName == null || value == null) {
+            throw new NullPointerException("Unable to fetch with null values");
+        }
+        Object v = value;
+        if (!TOUtils.isAnyTypeBasic(value.getClass())) {
+            v = connection.getPrimaryValue(value);
+        }
+
+        return fetch(connection.getBuilder().createWhere().start(columnName, TOUtils.simplifyObject(v)));
     }
 
     public List<T> fetch(WhereStatement statement) {

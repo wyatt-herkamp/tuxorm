@@ -91,6 +91,7 @@ public class TOUtils {
     }
 
     public static <T> Object quickGet(Class<T> type, Object id, TOConnection connection) {
+
         Dao<T, Object> dao = connection.createDao(type);
         return dao.findByID(id);
     }
@@ -110,6 +111,7 @@ public class TOUtils {
     }
 
     public static Class<?> simpleClass(Class<?> type) {
+        if (type == null) return null;
         if (type == Boolean.class || type == boolean.class) {
             return int.class;
         } else if (type == UUID.class) {
@@ -122,7 +124,7 @@ public class TOUtils {
         return type;
     }
 
-    public static String getFieldName(Field field) {
+    public static String getColumnNameByField(Field field) {
         TableColumn column = field.getAnnotation(TableColumn.class);
         return column.name().isEmpty() ? field.getName().toLowerCase() : column.name();
 
@@ -132,5 +134,9 @@ public class TOUtils {
         DBTable table = type.getAnnotation(DBTable.class);
         if (table == null) return null;
         return table.name().isEmpty() ? type.getSimpleName().toLowerCase() : table.name();
+    }
+
+    public static boolean isPrimitveNull(Object pkey) {
+        return pkey.equals(0) || pkey.equals(0L) || pkey.equals(0.0);
     }
 }

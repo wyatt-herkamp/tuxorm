@@ -6,7 +6,7 @@
 
     <groupId>me.kingtux</groupId>
     <artifactId>tuxorm</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
     <name>TuxORM</name>
     <licenses>
         <license>
@@ -114,18 +114,12 @@
         <dependency>
             <groupId>me.kingtux</groupId>
             <artifactId>tuxjsql-core</artifactId>
-            <version>1.2.1</version>
-        </dependency>
-        <dependency>
-            <groupId>me.kingtux</groupId>
-            <artifactId>tuxjsql-mysql</artifactId>
-            <version>1.2.1</version>
-            <scope>test</scope>
+            <version>1.2.3</version>
         </dependency>
         <dependency>
             <groupId>me.kingtux</groupId>
             <artifactId>tuxjsql-sqlite</artifactId>
-            <version>1.2</version>
+            <version>1.2.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>

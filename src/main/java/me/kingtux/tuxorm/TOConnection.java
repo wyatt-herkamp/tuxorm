@@ -56,6 +56,9 @@ public class TOConnection {
     }
 
     public Object getPrimaryValue(Object object) {
+        if(object == null){
+            throw new NullPointerException("Can't find Primary Key Value of null");
+        }
         for (Map.Entry<Class, PrimarySerializer> ecp : primarySerializers.entrySet()) {
             if (ecp.getKey().isInstance(object)) {
                 return ecp.getValue().getPrimaryKey(object);

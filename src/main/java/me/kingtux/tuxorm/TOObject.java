@@ -44,6 +44,15 @@ public class TOObject {
     }
 
     public Column getColumnForField(Field field) {
-        return table.getColumnByName(TOUtils.getFieldName(field));
+        return table.getColumnByName(TOUtils.getColumnNameByField(field));
+    }
+
+    public Field getFieldForColumnName(String columnName) {
+        for (Field field : type.getDeclaredFields()) {
+            if (TOUtils.getColumnNameByField(field).equals(columnName)) {
+                return field;
+            }
+        }
+        return null;
     }
 }

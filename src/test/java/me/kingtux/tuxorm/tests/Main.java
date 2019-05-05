@@ -4,12 +4,9 @@ import me.kingtux.tuxjsql.core.TuxJSQL;
 import me.kingtux.tuxorm.Dao;
 import me.kingtux.tuxorm.TOConnection;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.Scanner;
 
 public class Main {
     private static TOConnection connection;
@@ -22,8 +19,8 @@ public class Main {
         connection = new TOConnection(TuxJSQL.setup(properties));
         connection.registerClass(OverallClass.class);
 
-        Dao<OverallClass, Integer> dao = connection.createDao(OverallClass.class);
-        OverallClass clazz = new OverallClass("Welcome");
+        Dao<OverallClass, Long> dao = connection.createDao(OverallClass.class);
+        OverallClass clazz = new OverallClass("Welcome",  new SecondObject("COOL MAN"), Arrays.asList(4L, 6L));
         clazz = dao.create(clazz);
         System.out.println(clazz.toString());
         clazz.setName("Cool Guy");
@@ -32,7 +29,7 @@ public class Main {
         System.out.println(clazz.toString());
         clazz = dao.fetchFirst("name", "Cool Guy");
        System.out.println(clazz.toString());
-        dao.delete(clazz);
+        //dao.delete(clazz);
     }
 
 }

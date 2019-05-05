@@ -43,6 +43,7 @@ public final class DefaultSerializer {
         if(primaryKeyValue==null){
             throw new RuntimeException("Hey unable to locate a primarykey for "+ value.getClass().getSimpleName());
         }
+
         try {
             for (Map.Entry<Field, Table> extraTables : toObject.getOtherObjects().entrySet()) {
                 MultiSecondarySerializer mss = (MultiSecondarySerializer) toConnection.getSecondarySerializer(extraTables.getKey().getType());
@@ -61,9 +62,12 @@ public final class DefaultSerializer {
                         update.put(toObject.getColumnForField(field), ((SingleSecondarySerializer) serializer).getSimplifiedValue(field.get(value)));
                     }
                 } else {
-                    Object pkey = toConnection.getPrimaryValue(field.get(value));
-                    if (pkey == null) {
-                        pkey = TOUtils.quickInsert(field.get(value), toConnection);
+                    Object pkey = null;
+                    if (field.get(value) != null) {
+                        pkey = toConnection.getPrimaryValue(field.get(value));
+                        if (pkey == null || TOUtils.isPrimitveNull(pkey)) {
+                            pkey = toConnection.getPrimaryValue(TOUtils.quickInsert(field.get(value), toConnection));
+                        }
                     }
                     update.put(toObject.getColumnForField(field), pkey);
                 }
@@ -81,6 +85,7 @@ public final class DefaultSerializer {
     public Object create(Object value, TOObject toObject) {
         Object primaryKeyValue = null;
         String primaryKeyName = "";
+
         try {
             Map<Column, Object> insert = new HashMap<>();
             for (Field field : value.getClass().getDeclaredFields()) {
@@ -91,7 +96,7 @@ public final class DefaultSerializer {
                     if (!tc.autoIncrement()) {
                         primaryKeyValue = field.get(value);
                     } else {
-                        primaryKeyName = TOUtils.getFieldName(field);
+                        primaryKeyName = TOUtils.getColumnNameByField(field);
                     }
                 }
                 if (isAnyTypeBasic(field.getType())) {
@@ -102,9 +107,12 @@ public final class DefaultSerializer {
                         insert.put(toObject.getColumnForField(field), ((SingleSecondarySerializer) serializer).getSimplifiedValue(field.get(value)));
                     }
                 } else {
-                    Object pkey = toConnection.getPrimaryValue(field.get(value));
-                    if (pkey == null) {
-                        pkey = toConnection.getPrimaryValue(TOUtils.quickInsert(field.get(value), toConnection));
+                    Object pkey = null;
+                    if (field.get(value) != null) {
+                        pkey = toConnection.getPrimaryValue(field.get(value));
+                        if (pkey == null || TOUtils.isPrimitveNull(pkey)) {
+                            pkey = toConnection.getPrimaryValue(TOUtils.quickInsert(field.get(value), toConnection));
+                        }
                     }
                     insert.put(toObject.getColumnForField(field), pkey);
                 }
@@ -169,16 +177,16 @@ public final class DefaultSerializer {
                 SecondarySerializer ss = toConnection.getSecondarySerializer(field.getType());
                 if (ss != null) {
                     if (ss instanceof SingleSecondarySerializer) {
-                        columns.add(((SingleSecondarySerializer) ss).createColumn(TOUtils.getFieldName(field)));
+                        columns.add(((SingleSecondarySerializer) ss).createColumn(TOUtils.getColumnNameByField(field)));
                     } else if (ss instanceof MultiSecondarySerializer) {
                         extraTables.put(field,
-                                ((MultiSecondarySerializer) ss).createTable(TOUtils.getFieldName(field) + "_" + tName,
+                                ((MultiSecondarySerializer) ss).createTable(TOUtils.getColumnNameByField(field) + "_" + tName,
                                         field,
                                         TOUtils.getColumnType(TOUtils.simpleClass(getPrimaryKeyType(tableClass)))));
                     }
                 } else {
                     ColumnBuilder cb = builder.createColumn();
-                    cb.name(TOUtils.getFieldName(field)).type(TOUtils.getColumnType(TOUtils.simpleClass(getPrimaryKeyType(tableClass))));
+                    cb.name(TOUtils.getColumnNameByField(field)).type(TOUtils.getColumnType(TOUtils.simpleClass(getPrimaryKeyType(tableClass))));
                     columns.add(cb.build());
                 }
             }
@@ -191,8 +199,30 @@ public final class DefaultSerializer {
 
     public Column createColumn(Field field) {
         TableColumn tableColumn  = field.getAnnotation(TableColumn.class);
-        return toConnection.getBuilder().createColumn().name(TOUtils.getFieldName(field)).
-                type(TOUtils.getColumnType(simpleClass(field.getType()))).primary(tableColumn.primary()).autoIncrement(tableColumn.autoIncrement()).notNull(tableColumn.notNull()).build();
+        ColumnBuilder builder = toConnection.getBuilder().createColumn().name(TOUtils.getColumnNameByField(field)).
+                type(TOUtils.getColumnType(simpleClass(field.getType()))).primary(tableColumn.primary()).autoIncrement(tableColumn.autoIncrement()).notNull(tableColumn.notNull());
+        if (tableColumn.useDefault()) {
+            Object o = null;
+            try {
+                Object item = field.getDeclaringClass().getConstructor().newInstance();
+                System.out.println(item.getClass());
+                o = field.get(item);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+            if (o != null) {
+                if (isAnyTypeBasic(o.getClass())) {
+                    builder.defaultValue(simplifyObject(o));
+                }
+            }
+        }
+        return builder.build();
     }
 
     public <T> T build(Class<?> item, TOResult toResult, TOObject object) {
@@ -211,6 +241,7 @@ public final class DefaultSerializer {
                 TableColumn tc = field.getAnnotation(TableColumn.class);
                 if (tc == null) continue;
                 Object value = toResult.getPrimaryTable().getRow().getRowItem(object.getColumnForField(field).getName()).getAsObject();
+                if (value == null) continue;
                 if (isAnyTypeBasic(field.getType())) {
                     field.set(t, rebuildObject(field.getType(), value));
                 } else if (toConnection.getSecondarySerializer(field.getType()) != null) {
