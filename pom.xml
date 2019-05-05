@@ -6,7 +6,7 @@
 
     <groupId>me.kingtux</groupId>
     <artifactId>tuxorm</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
     <name>TuxORM</name>
     <licenses>
         <license>

@@ -3,6 +3,7 @@ package me.kingtux.tuxorm.tests;
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,7 +23,8 @@ public class OverallClass {
     private List<Long> longs = Arrays.asList(1L, 2L, 3L);
     @TableColumn
     private boolean value = false;
-
+    @TableColumn
+    private File file = new File("test.txt");
     public OverallClass(String name) {
         this.name = name;
     }

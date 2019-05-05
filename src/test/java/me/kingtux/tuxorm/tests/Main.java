@@ -4,6 +4,7 @@ import me.kingtux.tuxjsql.core.TuxJSQL;
 import me.kingtux.tuxorm.Dao;
 import me.kingtux.tuxorm.TOConnection;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
@@ -19,6 +20,7 @@ public class Main {
         connection = new TOConnection(TuxJSQL.setup(properties));
         connection.registerClass(OverallClass.class);
 
+        Dao<SecondObject, Long> sdao = connection.createDao(SecondObject.class);
         Dao<OverallClass, Long> dao = connection.createDao(OverallClass.class);
         OverallClass clazz = new OverallClass("Welcome",  new SecondObject("COOL MAN"), Arrays.asList(4L, 6L));
         clazz = dao.create(clazz);
@@ -29,6 +31,15 @@ public class Main {
         System.out.println(clazz.toString());
         clazz = dao.fetchFirst("name", "Cool Guy");
        System.out.println(clazz.toString());
+
+        OverallClass s = dao.fetchFirst("file", new File("test.txt"));
+        if (s == null) {
+            System.out.println("Failed TO by FIle");
+        }
+        OverallClass st = dao.fetchFirst("object", sdao.findByID(1L));
+        if (st == null) {
+            System.out.println("Failed TO by object reference");
+        }
         //dao.delete(clazz);
     }
 

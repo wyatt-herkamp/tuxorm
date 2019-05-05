@@ -5,6 +5,8 @@ import me.kingtux.tuxjsql.core.result.DBResult;
 import me.kingtux.tuxjsql.core.result.DBRow;
 import me.kingtux.tuxjsql.core.statements.WhereStatement;
 import me.kingtux.tuxorm.*;
+import me.kingtux.tuxorm.serializers.SecondarySerializer;
+import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -56,8 +58,15 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
         if (columnName == null || value == null) {
             throw new NullPointerException("Unable to fetch with null values");
         }
-        Object v = value;
-        if (!TOUtils.isAnyTypeBasic(value.getClass())) {
+        Object v = null;
+        if (TOUtils.isAnyTypeBasic(value.getClass())) {
+            v = value;
+        } else if (toObject.getFieldForColumnName(columnName) != null && connection.getSecondarySerializer(toObject.getFieldForColumnName(columnName).getType()) != null) {
+            SecondarySerializer secondarySerializer = connection.getSecondarySerializer(toObject.getFieldForColumnName(columnName).getType());
+            if (secondarySerializer instanceof SingleSecondarySerializer) {
+                v = ((SingleSecondarySerializer) secondarySerializer).getSimplifiedValue(value);
+            }
+        } else {
             v = connection.getPrimaryValue(value);
         }
 
