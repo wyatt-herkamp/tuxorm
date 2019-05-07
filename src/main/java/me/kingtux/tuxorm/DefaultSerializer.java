@@ -156,7 +156,7 @@ public final class DefaultSerializer {
             throw new IllegalArgumentException("the provided class is null");
         }
         if(tableClass.getAnnotation(DBTable.class)==null){
-            throw new IllegalArgumentException("Missing required @DBTable");
+            throw new IllegalArgumentException(tableClass.getName() + " is missing required @DBTable");
         }
         try {
             tableClass.getConstructor().newInstance();

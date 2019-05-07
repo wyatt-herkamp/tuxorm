@@ -23,21 +23,22 @@ public class TestSubMMS implements SubMSSCompatible<Item> {
     }
 
     @Override
-    public List<Column> getColumns() {
-        return Arrays.asList(connection.getBuilder().createColumn("item", CommonDataTypes.BIGINT), connection.getBuilder().createColumn("hey", CommonDataTypes.TEXT));
+    public List<Column> getColumns(String s) {
+        return Arrays.asList(connection.getBuilder()
+                .createColumn("item"+s, CommonDataTypes.BIGINT), connection.getBuilder().createColumn("hey"+s, CommonDataTypes.TEXT));
     }
 
     @Override
-    public Map<Column, Object> getValues(Item item, Table table) {
+    public Map<Column, Object> getValues(Item item, Table table, String s) {
         Map<Column, Object> objectMap = new HashMap<>();
-        objectMap.put(table.getColumnByName("item"), item.getI());
-        objectMap.put(table.getColumnByName("hey"), item.getS());
+        objectMap.put(table.getColumnByName("item"+s), item.getI());
+        objectMap.put(table.getColumnByName("hey"+s), item.getS());
         return objectMap;
     }
 
     @Override
-    public Item minorBuild(DBRow dbRows) {
-        return new Item(dbRows.getRowItem("hey").getAsString(), dbRows.getRowItem("item").getAsInt());
+    public Item minorBuild(DBRow dbRows, String s) {
+        return new Item(dbRows.getRowItem("hey"+s).getAsString(), dbRows.getRowItem("item"+s).getAsInt());
     }
 
     @Override

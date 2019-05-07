@@ -104,7 +104,7 @@ public class ListSerializer implements MultiSecondarySerializer<List<?>> {
 
                 }
             } else {
-                throw new IllegalArgumentException("At the moment TuxORM doesnt support MM inside a MM");
+                throw new IllegalArgumentException("This MSS is incompatible with SubMSS");
             }
         } else {
             tableBuilder.addColumn(builder.createColumn().name("child").type(TOUtils.getColumnType(connection.getPrimaryType(firstType))).build());

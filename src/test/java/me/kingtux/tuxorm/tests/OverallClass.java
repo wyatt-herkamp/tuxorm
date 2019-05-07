@@ -28,7 +28,7 @@ public class OverallClass {
     @TableColumn
     private File file = new File("test.txt");
     @TableColumn
-    private Map<Integer, String> item = new HashMap<>();
+    private Map<Integer, Item> item = new HashMap<>();
     public OverallClass(String name) {
         this.name = name;
     }
@@ -42,8 +42,8 @@ public class OverallClass {
     public OverallClass() {
     }
 
-    public String put(Integer integer, String s) {
-        return item.put(integer, s);
+    public Item put(Integer integer, Item s) {
+        return item.put(integer,  s);
     }
 
     public void setValue(boolean value) {

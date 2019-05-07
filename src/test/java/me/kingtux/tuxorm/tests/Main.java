@@ -24,7 +24,8 @@ public class Main {
         Dao<SecondObject, Long> sdao = connection.createDao(SecondObject.class);
         Dao<OverallClass, Long> dao = connection.createDao(OverallClass.class);
         OverallClass clazz = new OverallClass("Welcome",  new SecondObject("COOL MAN"), Arrays.asList(4L, 6L));
-        clazz.put(15,"GAY");
+        clazz.put(15,new Item("Hey", 134));
+        clazz.put(45,new Item("HeyBobby", 135346));
         clazz = dao.create(clazz);
         System.out.println(clazz.toString());
         clazz.setName("Cool Guy");

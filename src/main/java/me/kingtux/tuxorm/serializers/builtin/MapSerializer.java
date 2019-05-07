@@ -6,6 +6,7 @@ import me.kingtux.tuxjsql.core.DataType;
 import me.kingtux.tuxjsql.core.Table;
 import me.kingtux.tuxjsql.core.builders.SQLBuilder;
 import me.kingtux.tuxjsql.core.builders.TableBuilder;
+import me.kingtux.tuxjsql.core.result.ColumnItem;
 import me.kingtux.tuxjsql.core.result.DBResult;
 import me.kingtux.tuxjsql.core.result.DBRow;
 import me.kingtux.tuxorm.TOConnection;
@@ -13,13 +14,15 @@ import me.kingtux.tuxorm.TOUtils;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
 import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
+import me.kingtux.tuxorm.serializers.SubMSSCompatible;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static me.kingtux.tuxorm.TOUtils.PARENT_ID_NAME;
-import static me.kingtux.tuxorm.TOUtils.isAnyTypeBasic;
+import static me.kingtux.tuxorm.TOUtils.*;
 
 public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
     private TOConnection connection;
@@ -30,28 +33,37 @@ public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
 
     @Override
     public void insert(Map<?, ?> objects, Table table, Object parentID, Field field) {
-        Map<Object, Object> inserts = new HashMap<>();
         for (Map.Entry<?, ?> entry : objects.entrySet()) {
-            Object o = getValue(entry.getKey(), TOUtils.getFirstTypeParam(field));
-            Object o1 = getValue(entry.getValue(), TOUtils.getTypeParamAt(field, 1));
-            inserts.put(o, o1);
+            Map<Column, Object> inserts = new HashMap<>();
+            inserts.put(table.getColumnByName(PARENT_ID_NAME), parentID);
+            getValue(entry.getKey(), TOUtils.getTypeParamAt(field, 0), table, "key").forEach(inserts::put);
+            getValue(entry.getValue(), TOUtils.getTypeParamAt(field, 1), table, "value").forEach(inserts::put);
+            table.insert(inserts);
         }
 
-        inserts.forEach((o, o2) -> table.insertAll(parentID, o, o2));
+        //inserts.forEach((o, o2) -> table.insertAll(parentID, o, o2));
 
     }
 
-    private Object getValue(Object o, Class<?> type) {
+    private Map<Column, Object> getValue(Object o, Class<?> type, Table table, String key) {
         SecondarySerializer ss = connection.getSecondarySerializer(type);
         if (ss == null) {
             if (isAnyTypeBasic(o.getClass())) {
-                return TOUtils.simplifyObject(o);
+                Map<Column, Object> map = new HashMap();
+                map.put(table.getColumnByName(key), simplifyObject(o));
+                return map;
             } else {
-                return connection.getPrimaryValue(o);
+                Map<Column, Object> map = new HashMap();
+                map.put(table.getColumnByName(key), connection.getPrimaryValue(o));
+                return map;
             }
         } else {
             if (ss instanceof SingleSecondarySerializer) {
-                return ((SingleSecondarySerializer) ss).getSimplifiedValue(o);
+                Map<Column, Object> map = new HashMap();
+                map.put(table.getColumnByName(key), ((SingleSecondarySerializer) ss).getSimplifiedValue(o));
+                return map;
+            } else if (ss instanceof SubMSSCompatible) {
+                return ((SubMSSCompatible) ss).getValues(o, table,key);
             }
         }
         return null;
@@ -64,22 +76,26 @@ public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
         Class<?> type2 = TOUtils.getTypeParamAt(field, 1);
         Map<Object, Object> values = new HashMap<>();
         for (DBRow row : set) {
-            values.put(getBuild(row.getRowItem("key").getAsObject(), type1), getBuild(row.getRowItem("value").getAsObject(), type2));
+            Object o =getBuild(row.getRowItem("key"), type1, row, "key");
+            Object o2 =getBuild(row.getRowItem("value"), type2, row, "value");
+            values.put(o, o2);
         }
         return values;
     }
 
-    private Object getBuild(Object o, Class<?> type) {
+    private Object getBuild(ColumnItem o, Class<?> type, DBRow dbRow, String value) {
         SecondarySerializer ss = connection.getSecondarySerializer(type);
         if (ss == null) {
-            if (isAnyTypeBasic(o.getClass())) {
-                return TOUtils.rebuildObject(type, o);
+            if (isAnyTypeBasic(type)) {
+                return TOUtils.rebuildObject(type, o.getAsObject());
             } else {
-                return TOUtils.quickGet(type, o, connection);
+                return TOUtils.quickGet(type, o.getAsObject(), connection);
             }
         } else {
             if (ss instanceof SingleSecondarySerializer) {
-                return ((SingleSecondarySerializer) ss).buildFromSimplifiedValue(o);
+                return ((SingleSecondarySerializer) ss).buildFromSimplifiedValue(o.getAsObject());
+            } else if (ss instanceof SubMSSCompatible) {
+                return ((SubMSSCompatible) ss).minorBuild(dbRow, value);
             }
         }
         return null;
@@ -96,25 +112,29 @@ public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
 
         Class<?> type1 = TOUtils.getTypeParamAt(field, 0);
         Class<?> type2 = TOUtils.getTypeParamAt(field, 1);
-        tableBuilder.addColumn(getColumn("key", type1));
-        tableBuilder.addColumn(getColumn("value", type2));
+        getColumn("key", type1).forEach(tableBuilder::addColumn);
+        getColumn("value", type2).forEach(tableBuilder::addColumn);
+
 
         return tableBuilder.build();
     }
 
-    Column getColumn(String value, Class<?> type) {
+
+    List<Column> getColumn(String value, Class<?> type) {
         if (connection.getSecondarySerializer(type) == null) {
             if (isAnyTypeBasic(type)) {
-                return connection.getBuilder().createColumn().type(TOUtils.getColumnType(type)).name(value).build();
+                return Collections.singletonList(connection.getBuilder().createColumn().type(getColumnType(type)).name(value).build());
 
             } else {
-                return connection.getBuilder().createColumn().type(TOUtils.getColumnType(connection.getPrimaryType(type))).name(value).build();
+                return Collections.singletonList(connection.getBuilder().createColumn().type(getColumnType(connection.getPrimaryType(type))).name(value).build());
 
             }
         } else {
             SecondarySerializer secondarySerializer = connection.getSecondarySerializer(type);
             if (secondarySerializer instanceof SingleSecondarySerializer) {
-                return ((SingleSecondarySerializer) secondarySerializer).createColumn(value);
+                return Collections.singletonList(((SingleSecondarySerializer) secondarySerializer).createColumn(value));
+            } else if (secondarySerializer instanceof SubMSSCompatible) {
+                return ((SubMSSCompatible) secondarySerializer).getColumns(value);
             }
         }
         return null;

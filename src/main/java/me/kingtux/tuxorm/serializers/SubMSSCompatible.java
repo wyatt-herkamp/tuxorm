@@ -2,7 +2,6 @@ package me.kingtux.tuxorm.serializers;
 
 import me.kingtux.tuxjsql.core.Column;
 import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.result.DBResult;
 import me.kingtux.tuxjsql.core.result.DBRow;
 
 import java.util.List;
@@ -15,9 +14,21 @@ public interface SubMSSCompatible<T> extends MultiSecondarySerializer {
      *
      * @return
      */
-    List<Column> getColumns();
+    List<Column> getColumns(String after);
 
-    Map<Column, Object> getValues(T t, Table table);
+    default List<Column> getColumns() {
+        return getColumns("");
+    }
 
-    T minorBuild(DBRow dbRows);
+    Map<Column, Object> getValues(T t, Table table, String s);
+
+    default Map<Column, Object> getValues(T t, Table table) {
+        return getValues(t, table, "");
+    }
+
+    T minorBuild(DBRow dbRows, String after);
+
+    default T minorBuild(DBRow dbRows) {
+        return minorBuild(dbRows, "");
+    }
 }
