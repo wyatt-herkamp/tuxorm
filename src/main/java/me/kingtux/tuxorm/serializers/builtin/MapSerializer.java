@@ -11,9 +11,9 @@ import me.kingtux.tuxjsql.core.result.DBRow;
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.TOUtils;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
+import me.kingtux.tuxorm.serializers.MultipleValueSerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
 import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
-import me.kingtux.tuxorm.serializers.SubMSSCompatible;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -23,7 +23,7 @@ import java.util.Map;
 
 import static me.kingtux.tuxorm.TOUtils.*;
 
-public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
+public class MapSerializer implements MultipleValueSerializer<Map<?, ?>> {
     private TOConnection connection;
     private static final String VALUE = "value";
     private static final String KEY = "key";
@@ -60,8 +60,8 @@ public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
                 Map<Column, Object> map = new HashMap();
                 map.put(table.getColumnByName(key), ((SingleSecondarySerializer) ss).getSimplifiedValue(o));
                 return map;
-            } else if (ss instanceof SubMSSCompatible) {
-                return ((SubMSSCompatible) ss).getValues(o, table,key);
+            } else if (ss instanceof MultiSecondarySerializer && !(ss instanceof MultipleValueSerializer)) {
+                return ((MultiSecondarySerializer) ss).getValues(o, table, key);
             }
         }
         return Collections.emptyMap();
@@ -91,8 +91,8 @@ public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
         } else {
             if (ss instanceof SingleSecondarySerializer) {
                 return ((SingleSecondarySerializer) ss).buildFromSimplifiedValue(o.getAsObject());
-            } else if (ss instanceof SubMSSCompatible) {
-                return ((SubMSSCompatible) ss).minorBuild(dbRow, value);
+            } else if (ss instanceof MultiSecondarySerializer) {
+                return ((MultiSecondarySerializer) ss).minorBuild(dbRow, value);
             }
         }
         return null;
@@ -126,8 +126,8 @@ public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
             SecondarySerializer secondarySerializer = connection.getSecondarySerializer(type);
             if (secondarySerializer instanceof SingleSecondarySerializer) {
                 return Collections.singletonList(((SingleSecondarySerializer) secondarySerializer).createColumn(value));
-            } else if (secondarySerializer instanceof SubMSSCompatible) {
-                return ((SubMSSCompatible) secondarySerializer).getColumns(value);
+            } else if (secondarySerializer instanceof MultiSecondarySerializer) {
+                return ((MultiSecondarySerializer) secondarySerializer).getColumns(value);
             }
         }
         return Collections.emptyList();
@@ -137,5 +137,10 @@ public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
     @Override
     public TOConnection getConnection() {
         return connection;
+    }
+
+    @Override
+    public List<Object> contains(Object o, Table table) {
+        return TOUtils.contains(o, table, connection, KEY);
     }
 }

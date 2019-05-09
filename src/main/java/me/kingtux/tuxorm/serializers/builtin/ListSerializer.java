@@ -7,20 +7,22 @@ import me.kingtux.tuxjsql.core.builders.SQLBuilder;
 import me.kingtux.tuxjsql.core.builders.TableBuilder;
 import me.kingtux.tuxjsql.core.result.DBResult;
 import me.kingtux.tuxjsql.core.result.DBRow;
-import me.kingtux.tuxjsql.core.statements.WhereStatement;
 import me.kingtux.tuxorm.TOConnection;
+import me.kingtux.tuxorm.TOException;
 import me.kingtux.tuxorm.TOUtils;
-import me.kingtux.tuxorm.serializers.*;
+import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
+import me.kingtux.tuxorm.serializers.MultipleValueSerializer;
+import me.kingtux.tuxorm.serializers.SecondarySerializer;
+import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import static me.kingtux.tuxorm.TOUtils.*;
 
-public class ListSerializer implements MultiSecondarySerializer<List<?>>, MultipleValueSerializer {
+public class ListSerializer implements MultipleValueSerializer<List<?>> {
     private TOConnection connection;
     private static final String CHILD = "child";
     public ListSerializer(TOConnection connection) {
@@ -42,8 +44,8 @@ public class ListSerializer implements MultiSecondarySerializer<List<?>>, Multip
                 } else {
                     if (ss instanceof SingleSecondarySerializer) {
                         table.insertAll(parentID, ((SingleSecondarySerializer) ss).getSimplifiedValue(object));
-                    } else if (ss instanceof SubMSSCompatible) {
-                        Map<Column, Object> o = ((SubMSSCompatible) ss).getValues(object, table);
+                    } else if (ss instanceof MultiSecondarySerializer) {
+                        Map<Column, Object> o = ((MultiSecondarySerializer) ss).getValues(object, table);
                         o.put(table.getColumnByName(PARENT_ID_NAME), parentID);
                         table.insert(o);
                     }
@@ -67,8 +69,8 @@ public class ListSerializer implements MultiSecondarySerializer<List<?>>, Multip
                 for (DBRow row : set) {
                     value.add(((SingleSecondarySerializer) secondarySerializer).buildFromSimplifiedValue(row.getRowItem(CHILD).getAsObject()));
                 }
-            } else if (secondarySerializer instanceof SubMSSCompatible) {
-                SubMSSCompatible mssCompatible = (SubMSSCompatible) secondarySerializer;
+            } else if (secondarySerializer instanceof MultiSecondarySerializer) {
+                MultiSecondarySerializer mssCompatible = (MultiSecondarySerializer) secondarySerializer;
                 for (DBRow row : set) {
                     value.add(mssCompatible.minorBuild(row));
                 }
@@ -94,8 +96,11 @@ public class ListSerializer implements MultiSecondarySerializer<List<?>>, Multip
         } else if (ss instanceof SingleSecondarySerializer) {
             tableBuilder.addColumn(((SingleSecondarySerializer) ss).createColumn(CHILD));
         } else if (ss instanceof MultiSecondarySerializer) {
-            if (ss instanceof SubMSSCompatible) {
-                SubMSSCompatible smss = ((SubMSSCompatible) ss);
+            if (ss instanceof MultipleValueSerializer) {
+                throw new TOException("Cant have a MultipleValue in a MultipleValue");
+            }
+            if (ss instanceof MultiSecondarySerializer) {
+                MultiSecondarySerializer smss = ((MultiSecondarySerializer) ss);
                 for (Object c : smss.getColumns()) {
                     tableBuilder.addColumn((Column) c);
 
@@ -117,40 +122,6 @@ public class ListSerializer implements MultiSecondarySerializer<List<?>>, Multip
 
     @Override
     public List<Object> contains(Object o, Table table) {
-        List<Object> objects = new ArrayList<>();
-        DBResult result = null;
-        if (isAnyTypeBasic(o.getClass())) {
-            result = table.select(connection.getBuilder().createWhere().start(CHILD, o));
-
-        } else {
-            SecondarySerializer ss = connection.getSecondarySerializer(o.getClass());
-            if (ss == null) {
-                result = table.select(connection.getBuilder().createWhere().start(CHILD, connection.getPrimaryValue(o)));
-            } else {
-                if (ss instanceof SingleSecondarySerializer) {
-                    result = table.select(connection.getBuilder().createWhere().start(CHILD, ((SingleSecondarySerializer) ss).getSimplifiedValue(o)));
-
-                } else if (ss instanceof SubMSSCompatible) {
-                    SubMSSCompatible mssCompatible = (SubMSSCompatible) ss;
-                    WhereStatement where = connection.getBuilder().createWhere();
-                    Map<Column, Object> map = mssCompatible.getValues(o, table);
-                    int i = 0;
-                    for (Map.Entry<Column, Object> value : map.entrySet()) {
-                        if (i == 0) {
-                            where.start(value.getKey().getName(), value.getValue());
-                        } else {
-                            where.AND(value.getKey().getName(), value.getValue());
-                        }
-                        i++;
-                    }
-                    result = table.select(where);
-                }
-            }
-        }
-        if (result == null) return Collections.emptyList();
-        for (DBRow row : result) {
-            objects.add(rebuildObject(o.getClass(), row.getRowItem(PARENT_ID_NAME).getAsObject()));
-        }
-        return objects;
+        return TOUtils.contains(o, table, connection, CHILD);
     }
 }

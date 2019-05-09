@@ -7,7 +7,7 @@ import me.kingtux.tuxjsql.core.Table;
 import me.kingtux.tuxjsql.core.result.DBResult;
 import me.kingtux.tuxjsql.core.result.DBRow;
 import me.kingtux.tuxorm.TOConnection;
-import me.kingtux.tuxorm.serializers.SubMSSCompatible;
+import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.tests.objects.Item;
 
 import java.lang.reflect.Field;
@@ -16,11 +16,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TestSubMMS implements SubMSSCompatible<Item> {
+public class TestSubMMS implements MultiSecondarySerializer<Item> {
     private TOConnection connection;
 
     public TestSubMMS(TOConnection connection) {
         this.connection = connection;
+    }
+
+    @Override
+    public void insert(Item item, Table table, Object parentID, Field field) {
+
+    }
+
+    @Override
+    public Item build(DBResult dbResult, Field field) {
+        return null;
+    }
+
+    @Override
+    public Table createTable(String name, Field field, DataType parentDataType) {
+        return null;
     }
 
     @Override
@@ -42,20 +57,6 @@ public class TestSubMMS implements SubMSSCompatible<Item> {
         return new Item(dbRows.getRowItem("hey"+s).getAsString(), dbRows.getRowItem("item"+s).getAsInt());
     }
 
-    @Override
-    public void insert(Object o, Table table, Object parentID, Field field) {
-
-    }
-
-    @Override
-    public Object build(DBResult dbResult, Field field) {
-        return null;
-    }
-
-    @Override
-    public Table createTable(String name, Field field, DataType parentDataType) {
-        return null;
-    }
 
     @Override
     public TOConnection getConnection() {

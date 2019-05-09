@@ -1,17 +1,23 @@
 package me.kingtux.tuxorm;
 
+import me.kingtux.tuxjsql.core.Column;
 import me.kingtux.tuxjsql.core.CommonDataTypes;
 import me.kingtux.tuxjsql.core.DataType;
+import me.kingtux.tuxjsql.core.Table;
 import me.kingtux.tuxjsql.core.builders.SQLBuilder;
 import me.kingtux.tuxjsql.core.builders.TableBuilder;
+import me.kingtux.tuxjsql.core.result.DBResult;
+import me.kingtux.tuxjsql.core.result.DBRow;
+import me.kingtux.tuxjsql.core.statements.WhereStatement;
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
+import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
+import me.kingtux.tuxorm.serializers.SecondarySerializer;
+import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class TOUtils {
     public static final String PARENT_ID_NAME = "parent";
@@ -154,5 +160,45 @@ public class TOUtils {
 
     public static boolean isPrimitveNull(Object pkey) {
         return pkey.equals(0) || pkey.equals(0L) || pkey.equals(0.0);
+    }
+
+
+
+
+    public static List<Object> contains(Object o, Table table, TOConnection connection, String key) {
+        List<Object> objects = new ArrayList<>();
+        DBResult result = null;
+        if (isAnyTypeBasic(o.getClass())) {
+            result = table.select(connection.getBuilder().createWhere().start(key, o));
+
+        } else {
+            SecondarySerializer ss = connection.getSecondarySerializer(o.getClass());
+            if (ss == null) {
+                result = table.select(connection.getBuilder().createWhere().start(key, connection.getPrimaryValue(o)));
+            } else {
+                if (ss instanceof SingleSecondarySerializer) {
+                    result = table.select(connection.getBuilder().createWhere().start(key, ((SingleSecondarySerializer) ss).getSimplifiedValue(o)));
+                } else if (ss instanceof MultiSecondarySerializer) {
+                    MultiSecondarySerializer mssCompatible = (MultiSecondarySerializer) ss;
+                    WhereStatement where = connection.getBuilder().createWhere();
+                    Map<Column, Object> map = mssCompatible.getValues(o, table);
+                    int i = 0;
+                    for (Map.Entry<Column, Object> value : map.entrySet()) {
+                        if (i == 0) {
+                            where.start(value.getKey().getName(), value.getValue());
+                        } else {
+                            where.AND(value.getKey().getName(), value.getValue());
+                        }
+                        i++;
+                    }
+                    result = table.select(where);
+                }
+            }
+        }
+        if (result == null) return Collections.emptyList();
+        for (DBRow row : result) {
+            objects.add(rebuildObject(o.getClass(), row.getRowItem(PARENT_ID_NAME).getAsObject()));
+        }
+        return objects;
     }
 }
