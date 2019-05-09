@@ -22,12 +22,12 @@ Read [this](https://github.com/wherkamp/tuxorm/wiki/How-to-use-TuxORM)
     <dependency>
        <groupId>me.kingtux</groupId>
        <artifactId>tuxorm</artifactId>
-       <version>1.0</version>   
+       <version>1.2.4</version>   
     </dependency>
 ```
 ## Gradle
 ```
 dependencies {
-   compile "me.kingtux:tuxorm:1.0"
+   compile "me.kingtux:tuxorm:1.2.4"
 }
 ```
