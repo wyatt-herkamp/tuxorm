@@ -2,8 +2,8 @@ package me.kingtux.tuxorm;
 
 import java.util.List;
 
-public interface Dao<T, ID> {
-    T findByID(ID id);
+public interface Dao<T, I> {
+    T findByID(I id);
 
     void update(T t);
 
@@ -21,13 +21,13 @@ public interface Dao<T, ID> {
 
     default T fetchFirst(String columnName, Object value) {
         List<T> t = fetch(columnName, value);
-        if (t == null || t.size()==0) return null;
+        if (t == null || t.isEmpty()) return null;
         return t.get(0);
     }
 
     void delete(T t);
 
-    void deleteById(ID t);
+    void deleteById(I t);
 
     default void updateOrCreate(T t) {
         if (getConnection().getPrimaryValue(t) == null) {

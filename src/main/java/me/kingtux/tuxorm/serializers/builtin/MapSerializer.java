@@ -1,7 +1,6 @@
 package me.kingtux.tuxorm.serializers.builtin;
 
 import me.kingtux.tuxjsql.core.Column;
-import me.kingtux.tuxjsql.core.CommonDataTypes;
 import me.kingtux.tuxjsql.core.DataType;
 import me.kingtux.tuxjsql.core.Table;
 import me.kingtux.tuxjsql.core.builders.SQLBuilder;
@@ -26,6 +25,8 @@ import static me.kingtux.tuxorm.TOUtils.*;
 
 public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
     private TOConnection connection;
+    private static final String VALUE = "value";
+    private static final String KEY = "key";
 
     public MapSerializer(TOConnection connection) {
         this.connection = connection;
@@ -36,13 +37,10 @@ public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
         for (Map.Entry<?, ?> entry : objects.entrySet()) {
             Map<Column, Object> inserts = new HashMap<>();
             inserts.put(table.getColumnByName(PARENT_ID_NAME), parentID);
-            getValue(entry.getKey(), TOUtils.getTypeParamAt(field, 0), table, "key").forEach(inserts::put);
-            getValue(entry.getValue(), TOUtils.getTypeParamAt(field, 1), table, "value").forEach(inserts::put);
+            getValue(entry.getKey(), TOUtils.getTypeParamAt(field, 0), table, KEY).forEach(inserts::put);
+            getValue(entry.getValue(), TOUtils.getTypeParamAt(field, 1), table, VALUE).forEach(inserts::put);
             table.insert(inserts);
         }
-
-        //inserts.forEach((o, o2) -> table.insertAll(parentID, o, o2));
-
     }
 
     private Map<Column, Object> getValue(Object o, Class<?> type, Table table, String key) {
@@ -66,18 +64,17 @@ public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
                 return ((SubMSSCompatible) ss).getValues(o, table,key);
             }
         }
-        return null;
+        return Collections.emptyMap();
     }
 
     @Override
     public Map<?, ?> build(DBResult set, Field field) {
-        Map<Object, Object> value = new HashMap<>();
         Class<?> type1 = TOUtils.getTypeParamAt(field, 0);
         Class<?> type2 = TOUtils.getTypeParamAt(field, 1);
         Map<Object, Object> values = new HashMap<>();
         for (DBRow row : set) {
-            Object o =getBuild(row.getRowItem("key"), type1, row, "key");
-            Object o2 =getBuild(row.getRowItem("value"), type2, row, "value");
+            Object o =getBuild(row.getRowItem(KEY), type1, row, KEY);
+            Object o2 =getBuild(row.getRowItem(VALUE), type2, row, VALUE);
             values.put(o, o2);
         }
         return values;
@@ -104,16 +101,12 @@ public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
     @Override
     public Table createTable(String name, Field field, DataType parentDataType) {
         SQLBuilder builder = connection.getBuilder();
-        TableBuilder tableBuilder = builder.createTable().name(name);
-        tableBuilder.addColumn(builder.createColumn().name("id").primary(true).autoIncrement(true).type(CommonDataTypes.INT).build());
-        tableBuilder.addColumn(builder.createColumn().name(PARENT_ID_NAME).type(parentDataType).build());
-        Class<?> firstType = TOUtils.getFirstTypeParam(field);
-        SecondarySerializer ss = connection.getSecondarySerializer(firstType);
+        TableBuilder tableBuilder = TOUtils.basicTable(builder, name, parentDataType);
 
         Class<?> type1 = TOUtils.getTypeParamAt(field, 0);
         Class<?> type2 = TOUtils.getTypeParamAt(field, 1);
-        getColumn("key", type1).forEach(tableBuilder::addColumn);
-        getColumn("value", type2).forEach(tableBuilder::addColumn);
+        getColumn(KEY, type1).forEach(tableBuilder::addColumn);
+        getColumn(VALUE, type2).forEach(tableBuilder::addColumn);
 
 
         return tableBuilder.build();
@@ -137,7 +130,7 @@ public class MapSerializer implements MultiSecondarySerializer<Map<?, ?>> {
                 return ((SubMSSCompatible) secondarySerializer).getColumns(value);
             }
         }
-        return null;
+        return Collections.emptyList();
     }
 
 

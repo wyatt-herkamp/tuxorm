@@ -8,6 +8,7 @@ import me.kingtux.tuxjsql.core.result.DBResult;
 import me.kingtux.tuxjsql.core.result.DBRow;
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.serializers.SubMSSCompatible;
+import me.kingtux.tuxorm.tests.objects.Item;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;

@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ public class TOConnection {
     Map<Class<?>, SecondarySerializer> secondarySerializers = new HashMap<>();
     private DefaultSerializer defaultSerializer;
     public static final Logger logger = LoggerFactory.getLogger("TuxORM");
+    private List<Class<?>> registeredClasses = new ArrayList<>();
 
     /**
      * Main constructor for TuxORM.
@@ -74,15 +76,15 @@ public class TOConnection {
      *
      * @param type the class for the dao you want.
      * @param <T>  the type
-     * @param <ID> the ID type
+     * @param <I> the ID type
      * @return the Dao
      * @see Dao
      */
-    public <T, ID> Dao<T, ID> createDao(Class<T> type) {
+    public <T, I> Dao<T, I> createDao(Class<T> type) {
         registerClass(type);
-        Dao<T, ID> dao;
+        Dao<T, I> dao;
         if (getPrimarySerializer(type) == null) {
-            dao = new DefaultSerializerDao<T,ID>(defaultSerializer.getToObject(type), defaultSerializer,this);
+            dao = new DefaultSerializerDao<>(defaultSerializer.getToObject(type), defaultSerializer, this);
         } else {
             //TODO add support for customSerializer Daos
             dao = new PrimarySerializerDao(type, getPrimarySerializer(type), this);
@@ -95,11 +97,11 @@ public class TOConnection {
      * @see Dao
      * @param type The Table
      * @param <T> Your Class Type
-     * @param <ID> the ID type
+     * @param <I> the ID type
      * @return the dao
      */
-    public <T, ID> Dao<T, ID> createDao(T type) {
-        return (Dao<T, ID>) createDao(type.getClass());
+    public <T, I> Dao<T, I> createDao(T type) {
+        return (Dao) createDao(type.getClass());
     }
 
     /**
@@ -108,12 +110,16 @@ public class TOConnection {
      * @param type The class of what you need.
      */
     public void registerClass(Class<?> type) {
-        logger.debug("Registering class " + type.getSimpleName());
+        if (registeredClasses.contains(type)) return;
+
+        if (TOConnection.logger.isDebugEnabled())
+            logger.debug(String.format("Registering class %s", type.getSimpleName()));
         if (getPrimarySerializer(type) == null) {
             defaultSerializer.createTable(type);
         } else {
             getPrimarySerializer(type).createTable();
         }
+        registeredClasses.add(type);
     }
 
     public SecondarySerializer getSecondarySerializer(Class<?> type) {

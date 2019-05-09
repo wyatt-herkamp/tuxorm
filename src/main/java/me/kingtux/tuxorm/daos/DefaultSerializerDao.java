@@ -5,6 +5,8 @@ import me.kingtux.tuxjsql.core.result.DBResult;
 import me.kingtux.tuxjsql.core.result.DBRow;
 import me.kingtux.tuxjsql.core.statements.WhereStatement;
 import me.kingtux.tuxorm.*;
+import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
+import me.kingtux.tuxorm.serializers.MultipleValueSerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
 import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 
@@ -14,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
+public class DefaultSerializerDao<T, I> implements Dao<T, I> {
     private TOObject toObject;
     private DefaultSerializer defaultSerializer;
     private TOConnection connection;
@@ -26,7 +28,7 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
     }
 
     @Override
-    public T findByID(ID id) {
+    public T findByID(I id) {
         return fetchFirst(toObject.getTable().getPrimaryColumn().getName(), id);
     }
 
@@ -43,8 +45,11 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
         if(t==null){
             throw new NullPointerException("You can't insert null into db");
         }
-        ID id = (ID) defaultSerializer.create(t, toObject);
-        connection.getLogger().debug(id.toString());
+        I id = (I) defaultSerializer.create(t, toObject);
+
+        if (TOConnection.logger.isDebugEnabled())
+            connection.getLogger().debug(id.toString());
+
         return findByID(id);
     }
 
@@ -55,22 +60,40 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
 
     @Override
     public List<T> fetch(String columnName, Object value) {
+        String column = columnName;
         if (columnName == null || value == null) {
             throw new NullPointerException("Unable to fetch with null values");
         }
         Object v = null;
-        if (TOUtils.isAnyTypeBasic(value.getClass())) {
+        if (TOUtils.isAnyTypeBasic(toObject.getFieldForColumnName(columnName).getType())) {
             v = value;
-        } else if (toObject.getFieldForColumnName(columnName) != null && connection.getSecondarySerializer(toObject.getFieldForColumnName(columnName).getType()) != null) {
+        } else if (toObject.getFieldForColumnName(columnName) != null &&
+                connection.getSecondarySerializer(toObject.getFieldForColumnName(columnName).getType()) != null) {
             SecondarySerializer secondarySerializer = connection.getSecondarySerializer(toObject.getFieldForColumnName(columnName).getType());
             if (secondarySerializer instanceof SingleSecondarySerializer) {
                 v = ((SingleSecondarySerializer) secondarySerializer).getSimplifiedValue(value);
+            } else if (secondarySerializer instanceof MultiSecondarySerializer) {
+                if (secondarySerializer instanceof MultipleValueSerializer) {
+                    column = toObject.getTable().getPrimaryColumn().getName();
+                    v = ((MultipleValueSerializer) secondarySerializer).contains(value, toObject.getOtherObjects().get(toObject.getFieldForColumnName(columnName)));
+                } else {
+                    //TODO look by that object
+                }
             }
         } else {
             v = connection.getPrimaryValue(value);
         }
 
-        return fetch(connection.getBuilder().createWhere().start(columnName, TOUtils.simplifyObject(v)));
+        if (v instanceof List) {
+            List<T> values = new ArrayList<>();
+            for (Object object : ((List) v)) {
+                TOConnection.logger.debug(column + " " + object);
+                values.addAll(fetch(connection.getBuilder().createWhere().start(column, TOUtils.simplifyObject(object))));
+            }
+            return values;
+        } else {
+            return fetch(connection.getBuilder().createWhere().start(column, TOUtils.simplifyObject(v)));
+        }
     }
 
     public List<T> fetch(WhereStatement statement) {
@@ -106,7 +129,7 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
     }
 
     @Override
-    public void deleteById(ID t) {
+    public void deleteById(I t) {
         delete(findByID(t));
     }
 
@@ -127,6 +150,6 @@ public class DefaultSerializerDao<T, ID> implements Dao<T, ID> {
 
     @Override
     public T refresh(T t) {
-        return findByID((ID) defaultSerializer.getPrimaryKey(t));
+        return findByID((I) defaultSerializer.getPrimaryKey(t));
     }
 }

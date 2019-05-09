@@ -1,4 +1,4 @@
-package me.kingtux.tuxorm.tests;
+package me.kingtux.tuxorm.tests.objects;
 
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;

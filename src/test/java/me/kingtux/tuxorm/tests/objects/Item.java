@@ -1,4 +1,4 @@
-package me.kingtux.tuxorm.tests;
+package me.kingtux.tuxorm.tests.objects;
 
 public class Item {
     private String s;

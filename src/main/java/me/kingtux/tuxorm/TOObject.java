@@ -2,6 +2,7 @@ package me.kingtux.tuxorm;
 
 import me.kingtux.tuxjsql.core.Column;
 import me.kingtux.tuxjsql.core.Table;
+import me.kingtux.tuxorm.annotations.TableColumn;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -49,6 +50,7 @@ public class TOObject {
 
     public Field getFieldForColumnName(String columnName) {
         for (Field field : type.getDeclaredFields()) {
+            if (field.getAnnotation(TableColumn.class) == null) continue;
             if (TOUtils.getColumnNameByField(field).equals(columnName)) {
                 return field;
             }

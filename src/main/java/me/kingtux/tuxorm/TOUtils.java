@@ -2,6 +2,8 @@ package me.kingtux.tuxorm;
 
 import me.kingtux.tuxjsql.core.CommonDataTypes;
 import me.kingtux.tuxjsql.core.DataType;
+import me.kingtux.tuxjsql.core.builders.SQLBuilder;
+import me.kingtux.tuxjsql.core.builders.TableBuilder;
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 
@@ -16,6 +18,8 @@ public class TOUtils {
     private static List<Class<?>> basicTypes = Arrays.asList(long.class, Long.class, String.class, int.class, Integer.class);
     private static List<Class<?>> semiBasicTypes = Arrays.asList(UUID.class, Boolean.class, boolean.class, char[].class, Enum.class);
 
+    private TOUtils() {
+    }
 
     public static boolean isBasic(Class<?> e) {
         for (Class<?> c : basicTypes) {
@@ -83,7 +87,7 @@ public class TOUtils {
                 return Class.forName(ptype.getActualTypeArguments()[i].
                         toString().replace("class ", "").replace("interface ", ""));
             } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+                TOConnection.logger.error("Unable to locate class",e);
                 return null;
             }
         } else {
@@ -102,6 +106,12 @@ public class TOUtils {
         return dao.findByID(id);
     }
 
+    public static TableBuilder basicTable(SQLBuilder builder, String name, DataType parentDataType) {
+        TableBuilder tableBuilder = builder.createTable().name(name);
+        tableBuilder.addColumn(builder.createColumn().name("id").primary(true).autoIncrement(true).type(CommonDataTypes.INT).build());
+        tableBuilder.addColumn(builder.createColumn().name(PARENT_ID_NAME).type(parentDataType).build());
+        return tableBuilder;
+    }
     @SuppressWarnings("unchecked")
     public static Object rebuildObject(Class<?> type, Object o) {
         if (type == Boolean.class || type == boolean.class) {

@@ -7,7 +7,7 @@ import me.kingtux.tuxorm.serializers.PrimarySerializer;
 
 import java.util.List;
 //TODO set this up.
-public class PrimarySerializerDao<T, ID> implements Dao<T, ID> {
+public class PrimarySerializerDao<T, I> implements Dao<T, I> {
     private Class<?> type;
     private PrimarySerializer primarySerializer;
     private TOConnection connection;
@@ -19,7 +19,7 @@ public class PrimarySerializerDao<T, ID> implements Dao<T, ID> {
     }
 
     @Override
-    public T findByID(ID id) {
+    public T findByID(I id) {
         return null;
     }
 
@@ -49,7 +49,7 @@ public class PrimarySerializerDao<T, ID> implements Dao<T, ID> {
     }
 
     @Override
-    public void deleteById(ID t) {
+    public void deleteById(I t) {
 
     }
 

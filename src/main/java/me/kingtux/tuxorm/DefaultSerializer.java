@@ -41,7 +41,7 @@ public final class DefaultSerializer {
     public void update(Object value, TOObject toObject) {
         Object primaryKeyValue = getPrimaryKey(value);
         if(primaryKeyValue==null){
-            throw new RuntimeException("Hey unable to locate a primarykey for "+ value.getClass().getSimpleName());
+            throw new TOException("Hey unable to locate a primarykey for " + value.getClass().getSimpleName());
         }
 
         try {
@@ -78,7 +78,7 @@ public final class DefaultSerializer {
                 mss.insert(extraTables.getKey().get(value), extraTables.getValue(), primaryKeyValue, extraTables.getKey());
             }
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            TOConnection.logger.error("Unable to access field", e);
         }
     }
 
@@ -127,7 +127,7 @@ public final class DefaultSerializer {
                 mss.insert(extraTables.getKey().get(value), extraTables.getValue(), primaryKeyValue, extraTables.getKey());
             }
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            TOConnection.logger.error("Unable to access variable", e);
         }
         return primaryKeyValue;
     }
@@ -135,17 +135,12 @@ public final class DefaultSerializer {
     public Object getPrimaryKey(Object object) {
         for (Field field : object.getClass().getDeclaredFields()) {
             TableColumn tc = field.getAnnotation(TableColumn.class);
-            if (tc == null) continue;
-            if (!tc.primary()) continue;
+            if (tc == null || !tc.primary()) continue;
             field.setAccessible(true);
             try {
-              Object o =  field.get(object);
-              //if(o==null){
-              //    toConnection.getLogger().debug("PrimaryKey is Null");
-              //}
-              return o;
+                return field.get(object);
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                TOConnection.logger.error("Unable to access variable", e);
             }
         }
         return null;
@@ -192,9 +187,7 @@ public final class DefaultSerializer {
             }
         }
         objects.put(tableClass, new TOObject(tableClass, builder.createTable(tName, columns).createUpdate(), extraTables));
-        extraTables.forEach((field, table) -> {
-            table.createUpdate();
-        });
+        extraTables.forEach((field, table) -> table.createUpdate());
     }
 
     public Column createColumn(Field field) {
@@ -205,21 +198,13 @@ public final class DefaultSerializer {
             Object o = null;
             try {
                 Object item = field.getDeclaringClass().getConstructor().newInstance();
-                System.out.println(item.getClass());
                 o = field.get(item);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
+            } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
+                TOConnection.logger.error("Unable create instance of class", e);
             }
-            if (o != null) {
-                if (isAnyTypeBasic(o.getClass())) {
+            if (o != null && isAnyTypeBasic(o.getClass())) {
                     builder.defaultValue(simplifyObject(o));
-                }
+
             }
         }
         return builder.build();
@@ -234,14 +219,16 @@ public final class DefaultSerializer {
                 entry.getKey().set(t, mss.build(entry.getValue().getResult(), entry.getKey()));
             }
             for (Field field : item.getDeclaredFields()) {
-                if (toResult.getExtraTables().containsKey(field)) {
-                    continue;
-                }
+
                 field.setAccessible(true);
                 TableColumn tc = field.getAnnotation(TableColumn.class);
-                if (tc == null) continue;
+
+                if (toResult.getExtraTables().containsKey(field)
+                        || tc == null ||
+                        toResult.getPrimaryTable().getRow().getRowItem(object.getColumnForField(field).getName()).getAsObject()==null) continue;
+
                 Object value = toResult.getPrimaryTable().getRow().getRowItem(object.getColumnForField(field).getName()).getAsObject();
-                if (value == null) continue;
+
                 if (isAnyTypeBasic(field.getType())) {
                     field.set(t, rebuildObject(field.getType(), value));
                 } else if (toConnection.getSecondarySerializer(field.getType()) != null) {
@@ -254,14 +241,8 @@ public final class DefaultSerializer {
                 }
             }
             return t;
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            TOConnection.logger.error("Unable to work", e);
         }
         return null;
     }
@@ -270,9 +251,10 @@ public final class DefaultSerializer {
         Object o = getPrimaryKey(value);
         if(o==null) return;
         toObject.getTable().delete(toConnection.getBuilder().createWhere().start(toObject.getTable().getPrimaryColumn().getName(), o));
-        toObject.getOtherObjects().forEach((field, table) -> {
+        for (Map.Entry<Field, Table> entry : toObject.getOtherObjects().entrySet()) {
+            Table table = entry.getValue();
             table.delete(toConnection.getBuilder().createWhere().start(PARENT_ID_NAME, o));
-        });
+        }
     }
 
     public  TOObject getToObject(Class<?> type) {

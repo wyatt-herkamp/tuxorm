@@ -1,4 +1,4 @@
-package me.kingtux.tuxorm.tests;
+package me.kingtux.tuxorm.tests.objects;
 
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
@@ -74,5 +74,9 @@ public class OverallClass {
                 ", longs=" + longs +
                 ", value=" + value +
                 '}';
+    }
+
+    public SecondObject getObject() {
+        return object;
     }
 }
