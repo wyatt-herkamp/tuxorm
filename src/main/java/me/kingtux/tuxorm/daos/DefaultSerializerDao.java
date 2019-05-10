@@ -60,24 +60,31 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
 
     @Override
     public List<T> fetch(String columnName, Object value) {
-        String column = columnName;
         if (columnName == null || value == null) {
             throw new NullPointerException("Unable to fetch with null values");
         }
+        String column = columnName.toLowerCase();
+        Field field = toObject.getFieldForColumnName(column);
+        if (field == null) {
+            throw new NullPointerException(String.format("Unable to find column %s", column));
+        }
         Object v = null;
-        if (TOUtils.isAnyTypeBasic(toObject.getFieldForColumnName(columnName).getType())) {
+        if (TOUtils.isAnyTypeBasic(field.getType())) {
             v = value;
-        } else if (toObject.getFieldForColumnName(columnName) != null &&
-                connection.getSecondarySerializer(toObject.getFieldForColumnName(columnName).getType()) != null) {
-            SecondarySerializer secondarySerializer = connection.getSecondarySerializer(toObject.getFieldForColumnName(columnName).getType());
+        } else if (connection.getSecondarySerializer(field.getType()) != null) {
+            SecondarySerializer secondarySerializer = connection.getSecondarySerializer(field.getType());
             if (secondarySerializer instanceof SingleSecondarySerializer) {
                 v = ((SingleSecondarySerializer) secondarySerializer).getSimplifiedValue(value);
             } else if (secondarySerializer instanceof MultiSecondarySerializer) {
                 if (secondarySerializer instanceof MultipleValueSerializer) {
                     column = toObject.getTable().getPrimaryColumn().getName();
-                    v = ((MultipleValueSerializer) secondarySerializer).contains(value, toObject.getOtherObjects().get(toObject.getFieldForColumnName(columnName)));
+                    Table table = toObject.getOtherObjects().get(field);
+                    v = ((MultipleValueSerializer) secondarySerializer).contains(value, table);
                 } else {
-                    //TODO look by that object
+                    WhereStatement whereStatement = ((MultiSecondarySerializer) secondarySerializer).where(value, toObject.getOtherObjects().get(field));
+                    DBResult result = toObject.getOtherObjects().get(field).select(whereStatement);
+                    v = TOUtils.ids(result, value);
+                    column = toObject.getTable().getPrimaryColumn().getName();
                 }
             }
         } else {
@@ -87,7 +94,6 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
         if (v instanceof List) {
             List<T> values = new ArrayList<>();
             for (Object object : ((List) v)) {
-                TOConnection.logger.debug(column + " " + object);
                 values.addAll(fetch(connection.getBuilder().createWhere().start(column, TOUtils.simplifyObject(object))));
             }
             return values;

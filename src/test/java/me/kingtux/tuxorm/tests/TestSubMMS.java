@@ -7,14 +7,12 @@ import me.kingtux.tuxjsql.core.Table;
 import me.kingtux.tuxjsql.core.result.DBResult;
 import me.kingtux.tuxjsql.core.result.DBRow;
 import me.kingtux.tuxorm.TOConnection;
+import me.kingtux.tuxorm.TOUtils;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.tests.objects.Item;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class TestSubMMS implements MultiSecondarySerializer<Item> {
     private TOConnection connection;
@@ -25,17 +23,22 @@ public class TestSubMMS implements MultiSecondarySerializer<Item> {
 
     @Override
     public void insert(Item item, Table table, Object parentID, Field field) {
-
+        Map<Column, Object> o = getValues(item, table);
+        o.put(table.getColumnByName(TOUtils.PARENT_ID_NAME), TOUtils.simplifyObject(parentID));
+        table.insert(o);
     }
 
     @Override
     public Item build(DBResult dbResult, Field field) {
-        return null;
+        return minorBuild(dbResult.get(0));
     }
 
     @Override
     public Table createTable(String name, Field field, DataType parentDataType) {
-        return null;
+        List<Column> baseColumns = new ArrayList<>(getColumns());
+        baseColumns.add(connection.getBuilder().createColumn(TOUtils.PARENT_ID_NAME, parentDataType));
+        baseColumns.add(connection.getBuilder().createColumn().type(CommonDataTypes.BIGINT).name("id").autoIncrement(true).primary(true).build());
+        return connection.getBuilder().createTable(name, baseColumns);
     }
 
     @Override
@@ -60,6 +63,6 @@ public class TestSubMMS implements MultiSecondarySerializer<Item> {
 
     @Override
     public TOConnection getConnection() {
-        return null;
+        return connection;
     }
 }

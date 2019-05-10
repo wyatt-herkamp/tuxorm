@@ -53,6 +53,7 @@ public class TestMain {
         assertNotNull(dao.fetchFirst("file", new File("test.txt")));
         assertNotNull(dao.fetchFirst("object", sdao.findByID(1L)));
         assertNotNull(dao.fetchFirst("longs", 3L));
-        assertNotNull(dao.fetchFirst("item", 45));
+        assertNotNull(dao.fetchFirst("items", 45));
+        assertNotNull(dao.fetchFirst("item", new Item("bob", 1234)));
     }
 }

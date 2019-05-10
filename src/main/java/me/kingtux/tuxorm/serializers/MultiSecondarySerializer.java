@@ -5,6 +5,7 @@ import me.kingtux.tuxjsql.core.DataType;
 import me.kingtux.tuxjsql.core.Table;
 import me.kingtux.tuxjsql.core.result.DBResult;
 import me.kingtux.tuxjsql.core.result.DBRow;
+import me.kingtux.tuxjsql.core.statements.WhereStatement;
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.TOUtils;
 
@@ -28,6 +29,20 @@ public interface MultiSecondarySerializer<T> extends SecondarySerializer<T> {
         table.delete(getConnection().getBuilder().createWhere().start(TOUtils.PARENT_ID_NAME, TOUtils.simplifyObject(parentID)));
     }
 
+    default WhereStatement where(T o, Table table) {
+        WhereStatement where = getConnection().getBuilder().createWhere();
+        Map<Column, Object> map = getValues(o, table);
+        int i = 0;
+        for (Map.Entry<Column, Object> value : map.entrySet()) {
+            if (i == 0) {
+                where.start(value.getKey().getName(), value.getValue());
+            } else {
+                where.AND(value.getKey().getName(), value.getValue());
+            }
+            i++;
+        }
+        return where;
+    }
 
 
     /**

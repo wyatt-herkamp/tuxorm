@@ -4,7 +4,6 @@ import me.kingtux.tuxjsql.core.Column;
 import me.kingtux.tuxjsql.core.Table;
 import me.kingtux.tuxjsql.core.builders.ColumnBuilder;
 import me.kingtux.tuxjsql.core.builders.SQLBuilder;
-import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
@@ -39,11 +38,7 @@ public final class DefaultSerializer {
     }
 
     public void update(Object value, TOObject toObject) {
-        Object primaryKeyValue = getPrimaryKey(value);
-        if(primaryKeyValue==null){
-            throw new TOException("Hey unable to locate a primarykey for " + value.getClass().getSimpleName());
-        }
-
+        Object primaryKeyValue = TOValidator.validateUpdate(value, toObject, this);
         try {
             for (Map.Entry<Field, Table> extraTables : toObject.getOtherObjects().entrySet()) {
                 MultiSecondarySerializer mss = (MultiSecondarySerializer) toConnection.getSecondarySerializer(extraTables.getKey().getType());
@@ -83,9 +78,9 @@ public final class DefaultSerializer {
     }
 
     public Object create(Object value, TOObject toObject) {
+        TOValidator.validateCreate(value, toObject);
         Object primaryKeyValue = null;
         String primaryKeyName = "";
-
         try {
             Map<Column, Object> insert = new HashMap<>();
             for (Field field : value.getClass().getDeclaredFields()) {
@@ -119,9 +114,8 @@ public final class DefaultSerializer {
             }
             toObject.getTable().insert(insert);
 
-            if (primaryKeyValue == null) {
-                primaryKeyValue = toObject.getTable().max(primaryKeyName);
-            }
+            if (primaryKeyValue == null) primaryKeyValue = toObject.getTable().max(primaryKeyName);
+
             for (Map.Entry<Field, Table> extraTables : toObject.getOtherObjects().entrySet()) {
                 MultiSecondarySerializer mss = (MultiSecondarySerializer) toConnection.getSecondarySerializer(extraTables.getKey().getType());
                 mss.insert(extraTables.getKey().get(value), extraTables.getValue(), primaryKeyValue, extraTables.getKey());
@@ -147,17 +141,7 @@ public final class DefaultSerializer {
     }
 
     public void createTable(Class<?> tableClass) {
-        if(tableClass==null){
-            throw new IllegalArgumentException("the provided class is null");
-        }
-        if(tableClass.getAnnotation(DBTable.class)==null){
-            throw new IllegalArgumentException(tableClass.getName() + " is missing required @DBTable");
-        }
-        try {
-            tableClass.getConstructor().newInstance();
-        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new TOException("Unable to find public constructor!");
-        }
+        TOValidator.validateClass(tableClass);
         //Now get to work
         List<Column> columns = new ArrayList<>();
         Map<Field, Table> extraTables = new HashMap<>();
@@ -186,8 +170,10 @@ public final class DefaultSerializer {
                 }
             }
         }
-        objects.put(tableClass, new TOObject(tableClass, builder.createTable(tName, columns).createUpdate(), extraTables));
-        extraTables.forEach((field, table) -> table.createUpdate());
+        Table table = builder.createTable(tName, columns);
+        if (table.getPrimaryColumn() == null) throw new TOException("All TuxORM objects must have a Primary Key");
+        objects.put(tableClass, new TOObject(tableClass, table.createUpdate(), extraTables));
+        extraTables.forEach((field, t) -> t.createUpdate());
     }
 
     public Column createColumn(Field field) {
