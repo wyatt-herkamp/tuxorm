@@ -88,8 +88,11 @@ public class TOUtils {
         if (field.getGenericType() instanceof ParameterizedType) {
             ParameterizedType ptype = (ParameterizedType) field.getGenericType();
             try {
-                return Class.forName(ptype.getActualTypeArguments()[i].
-                        toString().replace("class ", "").replace("interface ", ""));
+                String clazz = ptype.getActualTypeArguments()[i].
+                        toString().replace("class ", "").replace("interface ", "");
+                if (TOConnection.logger.isDebugEnabled())
+                    TOConnection.logger.debug(String.format("%s Type is %s", field.getDeclaringClass().getName(), clazz));
+                return field.getDeclaringClass().getClassLoader().loadClass(clazz);
             } catch (ClassNotFoundException e) {
                 TOConnection.logger.error("Unable to locate class",e);
                 return null;
