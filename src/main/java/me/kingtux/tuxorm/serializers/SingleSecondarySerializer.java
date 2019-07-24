@@ -1,8 +1,8 @@
 package me.kingtux.tuxorm.serializers;
 
-import me.kingtux.tuxjsql.core.Column;
+import dev.tuxjsql.core.builders.ColumnBuilder;
+import dev.tuxjsql.core.sql.SQLColumn;
 
-import java.lang.reflect.Field;
 
 /**
  * Player
@@ -12,5 +12,5 @@ public interface SingleSecondarySerializer<T, V> extends SecondarySerializer<T> 
 
     T buildFromSimplifiedValue(V value);
 
-    Column createColumn(String name);
+    ColumnBuilder createColumn(String name);
 }

@@ -1,6 +1,6 @@
 package me.kingtux.tuxorm.annotations;
 
-import me.kingtux.tuxjsql.core.CommonDataTypes;
+import dev.tuxjsql.basic.sql.BasicDataTypes;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,5 +11,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface DataType {
 
-    CommonDataTypes type();
+    BasicDataTypes type();
 }

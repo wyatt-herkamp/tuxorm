@@ -1,12 +1,14 @@
 package me.kingtux.tuxorm.tests;
 
-import me.kingtux.tuxjsql.core.TuxJSQL;
+import dev.tuxjsql.core.TuxJSQL;
+import dev.tuxjsql.core.TuxJSQLBuilder;
 import me.kingtux.tuxorm.Dao;
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.tests.objects.Item;
 import me.kingtux.tuxorm.tests.objects.OverallClass;
 import me.kingtux.tuxorm.tests.objects.SecondObject;
 import org.junit.jupiter.api.Test;
+import sun.applet.Main;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,16 +21,18 @@ public class TestMain {
     private Properties properties = new Properties();
 
     public TestMain() {
-        properties.setProperty("db.type", "SQLITE");
+        properties.setProperty("db.type", "dev.tuxjsql.sqlite.SQLiteBuilder");
         properties.setProperty("db.file", "db.db");
     }
 
 
-
+public static void main(String[] args){
+        new TestMain().baseTests();
+}
     @Test
     public void baseTests() {
         new File("db.db").deleteOnExit();
-        TOConnection  connection = new TOConnection(TuxJSQL.setup(properties));
+        TOConnection  connection = new TOConnection(TuxJSQLBuilder.create(properties));
         connection.registerSecondarySerializer(Item.class, new TestSubMMS(connection));
         connection.registerClass(OverallClass.class);
         //Create Daos

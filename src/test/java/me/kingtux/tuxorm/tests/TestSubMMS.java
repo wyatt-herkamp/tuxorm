@@ -1,11 +1,15 @@
 package me.kingtux.tuxorm.tests;
 
-import me.kingtux.tuxjsql.core.Column;
-import me.kingtux.tuxjsql.core.CommonDataTypes;
-import me.kingtux.tuxjsql.core.DataType;
-import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.result.DBResult;
-import me.kingtux.tuxjsql.core.result.DBRow;
+import dev.tuxjsql.basic.sql.BasicDataTypes;
+import dev.tuxjsql.core.builders.ColumnBuilder;
+import dev.tuxjsql.core.builders.TableBuilder;
+import dev.tuxjsql.core.response.DBRow;
+import dev.tuxjsql.core.response.DBSelect;
+import dev.tuxjsql.core.sql.InsertStatement;
+import dev.tuxjsql.core.sql.SQLColumn;
+import dev.tuxjsql.core.sql.SQLDataType;
+import dev.tuxjsql.core.sql.SQLTable;
+
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.TOUtils;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
@@ -22,42 +26,50 @@ public class TestSubMMS implements MultiSecondarySerializer<Item> {
     }
 
     @Override
-    public void insert(Item item, Table table, Object parentID, Field field) {
-        Map<Column, Object> o = getValues(item, table);
-        o.put(table.getColumnByName(TOUtils.PARENT_ID_NAME), TOUtils.simplifyObject(parentID));
-        table.insert(o);
+    public void insert(Item item, SQLTable table, Object parentID, Field field) {
+        Map<SQLColumn, Object> o = getValues(item, table);
+        o.put(table.getColumn(TOUtils.PARENT_ID_NAME), TOUtils.simplifyObject(parentID));
+        InsertStatement insertStatement = table.insert();
+        o.forEach((sqlColumn, o1) -> {
+            insertStatement.value(sqlColumn.getName(), o1);
+        });
+        insertStatement.execute().queue();
     }
 
     @Override
-    public Item build(DBResult dbResult, Field field) {
+    public Item build(DBSelect dbResult, Field field) {
         return minorBuild(dbResult.get(0));
     }
 
     @Override
-    public Table createTable(String name, Field field, DataType parentDataType) {
-        List<Column> baseColumns = new ArrayList<>(getColumns());
-        baseColumns.add(connection.getBuilder().createColumn(TOUtils.PARENT_ID_NAME, parentDataType));
-        baseColumns.add(connection.getBuilder().createColumn().type(CommonDataTypes.BIGINT).name("id").autoIncrement(true).primary(true).build());
-        return connection.getBuilder().createTable(name, baseColumns);
+    public SQLTable createTable(String name, Field field, SQLDataType parentDataType) {
+        List<ColumnBuilder> baseColumns = new ArrayList<>(getColumns());
+        baseColumns.add(connection.getBuilder().createColumn().name(TOUtils.PARENT_ID_NAME).setDataType(parentDataType));
+        baseColumns.add(connection.getBuilder().createColumn().setDataType(BasicDataTypes.INTEGER).name("id").autoIncrement().primaryKey());
+        TableBuilder builder = connection.getBuilder().createTable();
+        builder.setName(name);
+        baseColumns.forEach(builder::addColumn);
+
+        return builder.createTable();
+
     }
 
     @Override
-    public List<Column> getColumns(String s) {
-        return Arrays.asList(connection.getBuilder()
-                .createColumn("item"+s, CommonDataTypes.BIGINT), connection.getBuilder().createColumn("hey"+s, CommonDataTypes.TEXT));
+    public List<ColumnBuilder> getColumns(String s) {
+        return Arrays.asList(connection.getBuilder().createColumn().name("item" + s).setDataType(BasicDataTypes.INTEGER), connection.getBuilder().createColumn().name("hey" + s).setDataType(BasicDataTypes.TEXT));
     }
 
     @Override
-    public Map<Column, Object> getValues(Item item, Table table, String s) {
-        Map<Column, Object> objectMap = new HashMap<>();
-        objectMap.put(table.getColumnByName("item"+s), item.getI());
-        objectMap.put(table.getColumnByName("hey"+s), item.getS());
+    public Map<SQLColumn, Object> getValues(Item item, SQLTable table, String s) {
+        Map<SQLColumn, Object> objectMap = new HashMap<>();
+        objectMap.put(table.getColumn("item" + s), item.getI());
+        objectMap.put(table.getColumn("hey" + s), item.getS());
         return objectMap;
     }
 
     @Override
     public Item minorBuild(DBRow dbRows, String s) {
-        return new Item(dbRows.getRowItem("hey"+s).getAsString(), dbRows.getRowItem("item"+s).getAsInt());
+        return new Item(dbRows.getRow("hey" + s).getAsString(), dbRows.getRow("item" + s).getAsInt());
     }
 
 

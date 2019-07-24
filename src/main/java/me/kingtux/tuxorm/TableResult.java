@@ -1,25 +1,26 @@
 package me.kingtux.tuxorm;
 
-import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.result.DBResult;
-import me.kingtux.tuxjsql.core.result.DBRow;
+
+import dev.tuxjsql.core.response.DBRow;
+import dev.tuxjsql.core.response.DBSelect;
+import dev.tuxjsql.core.sql.SQLTable;
 
 public class TableResult {
     private DBRow row;
-    private Table table;
-    private DBResult result;
+    private SQLTable table;
+    private DBSelect result;
 
-    public TableResult(DBRow result, Table table) {
+    public TableResult(DBRow result, SQLTable table) {
         this.row = result;
         this.table = table;
     }
 
-    public TableResult(Table table, DBResult result) {
+    public TableResult(SQLTable table, DBSelect result) {
         this.table = table;
         this.result = result;
     }
 
-    public DBResult getResult() {
+    public DBSelect getResult() {
         return result;
     }
 
@@ -27,7 +28,7 @@ public class TableResult {
         return row;
     }
 
-    public Table getTable() {
+    public SQLTable getTable() {
         return table;
     }
 }

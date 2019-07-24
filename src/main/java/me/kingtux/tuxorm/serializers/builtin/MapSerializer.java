@@ -1,15 +1,18 @@
 package me.kingtux.tuxorm.serializers.builtin;
 
-import me.kingtux.tuxjsql.core.Column;
-import me.kingtux.tuxjsql.core.DataType;
-import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.builders.SQLBuilder;
-import me.kingtux.tuxjsql.core.builders.TableBuilder;
-import me.kingtux.tuxjsql.core.result.ColumnItem;
-import me.kingtux.tuxjsql.core.result.DBResult;
-import me.kingtux.tuxjsql.core.result.DBRow;
+import dev.tuxjsql.core.builders.ColumnBuilder;
+import dev.tuxjsql.core.builders.SQLBuilder;
+import dev.tuxjsql.core.builders.TableBuilder;
+import dev.tuxjsql.core.response.DBColumnItem;
+import dev.tuxjsql.core.response.DBRow;
+import dev.tuxjsql.core.response.DBSelect;
+import dev.tuxjsql.core.sql.InsertStatement;
+import dev.tuxjsql.core.sql.SQLColumn;
+import dev.tuxjsql.core.sql.SQLDataType;
+import dev.tuxjsql.core.sql.SQLTable;
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.TOUtils;
+import me.kingtux.tuxorm.annotations.DataType;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.MultipleValueSerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
@@ -33,32 +36,35 @@ public class MapSerializer implements MultipleValueSerializer<Map<?, ?>> {
     }
 
     @Override
-    public void insert(Map<?, ?> objects, Table table, Object parentID, Field field) {
+    public void insert(Map<?, ?> objects, SQLTable table, Object parentID, Field field) {
         for (Map.Entry<?, ?> entry : objects.entrySet()) {
-            Map<Column, Object> inserts = new HashMap<>();
-            inserts.put(table.getColumnByName(PARENT_ID_NAME), parentID);
+            Map<SQLColumn, Object> inserts = new HashMap<>();
+            inserts.put(table.getColumn(PARENT_ID_NAME), parentID);
             getValue(entry.getKey(), TOUtils.getTypeParamAt(field, 0), table, KEY).forEach(inserts::put);
             getValue(entry.getValue(), TOUtils.getTypeParamAt(field, 1), table, VALUE).forEach(inserts::put);
-            table.insert(inserts);
-        }
+            InsertStatement insertStatement = table.insert();
+            inserts.forEach((sqlColumn, o1) -> {
+                insertStatement.value(sqlColumn.getName(), o1);
+            });
+            insertStatement.execute().queue();        }
     }
 
-    private Map<Column, Object> getValue(Object o, Class<?> type, Table table, String key) {
+    private Map<SQLColumn, Object> getValue(Object o, Class<?> type, SQLTable table, String key) {
         SecondarySerializer ss = connection.getSecondarySerializer(type);
         if (ss == null) {
             if (isAnyTypeBasic(o.getClass())) {
-                Map<Column, Object> map = new HashMap();
-                map.put(table.getColumnByName(key), simplifyObject(o));
+                Map<SQLColumn, Object> map = new HashMap();
+                map.put(table.getColumn(key), simplifyObject(o));
                 return map;
             } else {
-                Map<Column, Object> map = new HashMap();
-                map.put(table.getColumnByName(key), connection.getPrimaryValue(o));
+                Map<SQLColumn, Object> map = new HashMap();
+                map.put(table.getColumn(key), connection.getPrimaryValue(o));
                 return map;
             }
         } else {
             if (ss instanceof SingleSecondarySerializer) {
-                Map<Column, Object> map = new HashMap();
-                map.put(table.getColumnByName(key), ((SingleSecondarySerializer) ss).getSimplifiedValue(o));
+                Map<SQLColumn, Object> map = new HashMap();
+                map.put(table.getColumn(key), ((SingleSecondarySerializer) ss).getSimplifiedValue(o));
                 return map;
             } else if (ss instanceof MultiSecondarySerializer && !(ss instanceof MultipleValueSerializer)) {
                 return ((MultiSecondarySerializer) ss).getValues(o, table, key);
@@ -68,19 +74,19 @@ public class MapSerializer implements MultipleValueSerializer<Map<?, ?>> {
     }
 
     @Override
-    public Map<?, ?> build(DBResult set, Field field) {
+    public Map<?, ?> build(DBSelect set, Field field) {
         Class<?> type1 = TOUtils.getTypeParamAt(field, 0);
         Class<?> type2 = TOUtils.getTypeParamAt(field, 1);
         Map<Object, Object> values = new HashMap<>();
         for (DBRow row : set) {
-            Object o =getBuild(row.getRowItem(KEY), type1, row, KEY);
-            Object o2 =getBuild(row.getRowItem(VALUE), type2, row, VALUE);
+            Object o =getBuild(row.getRow(KEY), type1, row, KEY);
+            Object o2 =getBuild(row.getRow(VALUE), type2, row, VALUE);
             values.put(o, o2);
         }
         return values;
     }
 
-    private Object getBuild(ColumnItem o, Class<?> type, DBRow dbRow, String value) {
+    private Object getBuild(DBColumnItem o, Class<?> type, DBRow dbRow, String value) {
         SecondarySerializer ss = connection.getSecondarySerializer(type);
         if (ss == null) {
             if (isAnyTypeBasic(type)) {
@@ -99,7 +105,7 @@ public class MapSerializer implements MultipleValueSerializer<Map<?, ?>> {
     }
 
     @Override
-    public Table createTable(String name, Field field, DataType parentDataType) {
+    public SQLTable createTable(String name, Field field, SQLDataType parentDataType) {
         SQLBuilder builder = connection.getBuilder();
         TableBuilder tableBuilder = TOUtils.basicTable(builder, name, parentDataType);
 
@@ -109,17 +115,17 @@ public class MapSerializer implements MultipleValueSerializer<Map<?, ?>> {
         getColumn(VALUE, type2).forEach(tableBuilder::addColumn);
 
 
-        return tableBuilder.build();
+        return tableBuilder.createTable();
     }
 
 
-    List<Column> getColumn(String value, Class<?> type) {
+    List<ColumnBuilder> getColumn(String value, Class<?> type) {
         if (connection.getSecondarySerializer(type) == null) {
             if (isAnyTypeBasic(type)) {
-                return Collections.singletonList(connection.getBuilder().createColumn().type(getColumnType(type)).name(value).build());
+                return Collections.singletonList(connection.getBuilder().createColumn().setDataType(getColumnType(type)).name(value));
 
             } else {
-                return Collections.singletonList(connection.getBuilder().createColumn().type(getColumnType(connection.getPrimaryType(type))).name(value).build());
+                return Collections.singletonList(connection.getBuilder().createColumn().setDataType(getColumnType(connection.getPrimaryType(type))).name(value));
 
             }
         } else {
@@ -140,7 +146,7 @@ public class MapSerializer implements MultipleValueSerializer<Map<?, ?>> {
     }
 
     @Override
-    public List<Object> contains(Object o, Table table) {
+    public List<Object> contains(Object o, SQLTable table) {
         return TOUtils.contains(o, table, connection, KEY);
     }
 }

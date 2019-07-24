@@ -1,9 +1,14 @@
 package me.kingtux.tuxorm;
 
-import me.kingtux.tuxjsql.core.Column;
-import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.builders.ColumnBuilder;
-import me.kingtux.tuxjsql.core.builders.SQLBuilder;
+
+import dev.tuxjsql.core.builders.ColumnBuilder;
+import dev.tuxjsql.core.builders.SQLBuilder;
+import dev.tuxjsql.core.builders.TableBuilder;
+import dev.tuxjsql.core.response.DBInsert;
+import dev.tuxjsql.core.sql.InsertStatement;
+import dev.tuxjsql.core.sql.SQLColumn;
+import dev.tuxjsql.core.sql.SQLTable;
+import dev.tuxjsql.core.sql.UpdateStatement;
 import me.kingtux.tuxorm.annotations.TableColumn;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
@@ -40,11 +45,11 @@ public final class DefaultSerializer {
     public void update(Object value, TOObject toObject) {
         Object primaryKeyValue = TOValidator.validateUpdate(value, toObject, this);
         try {
-            for (Map.Entry<Field, Table> extraTables : toObject.getOtherObjects().entrySet()) {
+            for (Map.Entry<Field, SQLTable> extraTables : toObject.getOtherObjects().entrySet()) {
                 MultiSecondarySerializer mss = (MultiSecondarySerializer) toConnection.getSecondarySerializer(extraTables.getKey().getType());
                 mss.delete(primaryKeyValue, extraTables.getKey(), extraTables.getValue());
             }
-            Map<Column, Object> update = new HashMap<>();
+            Map<SQLColumn, Object> update = new HashMap<>();
             for (Field field : value.getClass().getDeclaredFields()) {
                 TableColumn tc = field.getAnnotation(TableColumn.class);
                 if (tc == null) continue;
@@ -67,8 +72,11 @@ public final class DefaultSerializer {
                     update.put(toObject.getColumnForField(field), pkey);
                 }
             }
-            toObject.getTable().update(primaryKeyValue, update);
-            for (Map.Entry<Field, Table> extraTables : toObject.getOtherObjects().entrySet()) {
+            //insert
+            UpdateStatement statement = toObject.getTable().update().where().start(toObject.getTable().getPrimaryColumn().getName(), primaryKeyValue).and();
+            update.forEach((sqlColumn, o) -> statement.value(sqlColumn.getName(), o));
+            statement.execute().complete();
+            for (Map.Entry<Field, SQLTable> extraTables : toObject.getOtherObjects().entrySet()) {
                 MultiSecondarySerializer mss = (MultiSecondarySerializer) toConnection.getSecondarySerializer(extraTables.getKey().getType());
                 mss.insert(extraTables.getKey().get(value), extraTables.getValue(), primaryKeyValue, extraTables.getKey());
             }
@@ -82,16 +90,18 @@ public final class DefaultSerializer {
         Object primaryKeyValue = null;
         String primaryKeyName = "";
         try {
-            Map<Column, Object> insert = new HashMap<>();
+            Map<SQLColumn, Object> insert = new HashMap<>();
             for (Field field : value.getClass().getDeclaredFields()) {
                 TableColumn tc = field.getAnnotation(TableColumn.class);
                 if (tc == null) continue;
                 field.setAccessible(true);
                 if (tc.primary()) {
                     if (!tc.autoIncrement()) {
+
                         primaryKeyValue = field.get(value);
                     } else {
                         primaryKeyName = TOUtils.getColumnNameByField(field);
+                        continue;
                     }
                 }
                 if (isAnyTypeBasic(field.getType())) {
@@ -112,11 +122,15 @@ public final class DefaultSerializer {
                     insert.put(toObject.getColumnForField(field), pkey);
                 }
             }
-            toObject.getTable().insert(insert);
 
-            if (primaryKeyValue == null) primaryKeyValue = toObject.getTable().max(primaryKeyName);
+            InsertStatement statement = toObject.getTable().insert();
+            insert.forEach((sqlColumn, o) -> {
+                statement.value(sqlColumn.getName(), o);
+            });
+            DBInsert insertResult = statement.execute().complete();
+            if (primaryKeyValue == null) primaryKeyValue = insertResult.primaryKey();
 
-            for (Map.Entry<Field, Table> extraTables : toObject.getOtherObjects().entrySet()) {
+            for (Map.Entry<Field, SQLTable> extraTables : toObject.getOtherObjects().entrySet()) {
                 MultiSecondarySerializer mss = (MultiSecondarySerializer) toConnection.getSecondarySerializer(extraTables.getKey().getType());
                 mss.insert(extraTables.getKey().get(value), extraTables.getValue(), primaryKeyValue, extraTables.getKey());
             }
@@ -143,12 +157,12 @@ public final class DefaultSerializer {
     public void createTable(Class<?> tableClass) {
         TOValidator.validateClass(tableClass);
         //Now get to work
-        List<Column> columns = new ArrayList<>();
-        Map<Field, Table> extraTables = new HashMap<>();
+        List<ColumnBuilder> columns = new ArrayList<>();
+        Map<Field, SQLTable> extraTables = new HashMap<>();
         SQLBuilder builder = toConnection.getBuilder();
         String tName = TOUtils.getClassName(tableClass);
         for (Field field : tableClass.getDeclaredFields()) {
-            if(field.getAnnotation(TableColumn.class)==null)  continue;
+            if (field.getAnnotation(TableColumn.class) == null) continue;
             field.setAccessible(true);
             if (isAnyTypeBasic(field.getType())) {
                 columns.add(createColumn(field));
@@ -165,21 +179,26 @@ public final class DefaultSerializer {
                     }
                 } else {
                     ColumnBuilder cb = builder.createColumn();
-                    cb.name(TOUtils.getColumnNameByField(field)).type(TOUtils.getColumnType(TOUtils.simpleClass(getPrimaryKeyType(tableClass))));
-                    columns.add(cb.build());
+                    cb.name(TOUtils.getColumnNameByField(field)).setDataType(TOUtils.getColumnType(TOUtils.simpleClass(getPrimaryKeyType(tableClass))));
+                    columns.add(cb);
                 }
             }
         }
-        Table table = builder.createTable(tName, columns);
+        TableBuilder tableBuilder = builder.createTable().setName(tName);
+        columns.forEach(tableBuilder::addColumn);
+        SQLTable table = tableBuilder.createTable();
         if (table.getPrimaryColumn() == null) throw new TOException("All TuxORM objects must have a Primary Key");
-        objects.put(tableClass, new TOObject(tableClass, table.createUpdate(), extraTables));
-        extraTables.forEach((field, t) -> t.createUpdate());
+        objects.put(tableClass, new TOObject(tableClass, table, extraTables));
+//        extraTables.forEach((field, t) -> t.c());
     }
 
-    public Column createColumn(Field field) {
-        TableColumn tableColumn  = field.getAnnotation(TableColumn.class);
+    public ColumnBuilder createColumn(Field field) {
+        TableColumn tableColumn = field.getAnnotation(TableColumn.class);
         ColumnBuilder builder = toConnection.getBuilder().createColumn().name(TOUtils.getColumnNameByField(field)).
-                type(TOUtils.getColumnType(simpleClass(field.getType()))).primary(tableColumn.primary()).autoIncrement(tableColumn.autoIncrement()).notNull(tableColumn.notNull());
+                setDataType(TOUtils.getColumnType(simpleClass(field.getType())));
+        if (tableColumn.autoIncrement()) builder.autoIncrement();
+        if (tableColumn.primary()) builder.primaryKey();
+        if (tableColumn.notNull()) builder.notNull();
         if (tableColumn.useDefault()) {
             Object o = null;
             try {
@@ -189,11 +208,11 @@ public final class DefaultSerializer {
                 TOConnection.logger.error("Unable create instance of class", e);
             }
             if (o != null && isAnyTypeBasic(o.getClass())) {
-                    builder.defaultValue(simplifyObject(o));
+                builder.defaultValue(simplifyObject(o));
 
             }
         }
-        return builder.build();
+        return builder;
     }
 
     public <T> T build(Class<?> item, TOResult toResult, TOObject object) {
@@ -211,9 +230,10 @@ public final class DefaultSerializer {
 
                 if (toResult.getExtraTables().containsKey(field)
                         || tc == null ||
-                        toResult.getPrimaryTable().getRow().getRowItem(object.getColumnForField(field).getName()).getAsObject()==null) continue;
+                        toResult.getPrimaryTable().getRow().getRow(object.getColumnForField(field).getName()).getAsObject() == null)
+                    continue;
 
-                Object value = toResult.getPrimaryTable().getRow().getRowItem(object.getColumnForField(field).getName()).getAsObject();
+                Object value = toResult.getPrimaryTable().getRow().getRow(object.getColumnForField(field).getName()).getAsObject();
 
                 if (isAnyTypeBasic(field.getType())) {
                     field.set(t, rebuildObject(field.getType(), value));
@@ -235,15 +255,15 @@ public final class DefaultSerializer {
 
     public void delete(Object value, TOObject toObject) {
         Object o = getPrimaryKey(value);
-        if(o==null) return;
-        toObject.getTable().delete(toConnection.getBuilder().createWhere().start(toObject.getTable().getPrimaryColumn().getName(), o));
-        for (Map.Entry<Field, Table> entry : toObject.getOtherObjects().entrySet()) {
-            Table table = entry.getValue();
-            table.delete(toConnection.getBuilder().createWhere().start(PARENT_ID_NAME, o));
+        if (o == null) return;
+        toObject.getTable().delete().where().start(toObject.getTable().getPrimaryColumn().getName(), o).and().execute().queue();
+        for (Map.Entry<Field, SQLTable> entry : toObject.getOtherObjects().entrySet()) {
+            SQLTable table = entry.getValue();
+            table.delete().where().start(PARENT_ID_NAME, o).and().execute().queue();
         }
     }
 
-    public  TOObject getToObject(Class<?> type) {
+    public TOObject getToObject(Class<?> type) {
         return objects.get(type);
     }
 }

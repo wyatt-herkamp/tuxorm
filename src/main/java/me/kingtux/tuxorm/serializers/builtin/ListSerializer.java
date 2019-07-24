@@ -1,15 +1,19 @@
 package me.kingtux.tuxorm.serializers.builtin;
 
-import me.kingtux.tuxjsql.core.Column;
-import me.kingtux.tuxjsql.core.DataType;
-import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.builders.SQLBuilder;
-import me.kingtux.tuxjsql.core.builders.TableBuilder;
-import me.kingtux.tuxjsql.core.result.DBResult;
-import me.kingtux.tuxjsql.core.result.DBRow;
+import dev.tuxjsql.core.builders.ColumnBuilder;
+import dev.tuxjsql.core.builders.SQLBuilder;
+import dev.tuxjsql.core.builders.TableBuilder;
+import dev.tuxjsql.core.response.DBRow;
+import dev.tuxjsql.core.response.DBSelect;
+import dev.tuxjsql.core.sql.InsertStatement;
+import dev.tuxjsql.core.sql.SQLColumn;
+import dev.tuxjsql.core.sql.SQLDataType;
+import dev.tuxjsql.core.sql.SQLTable;
+
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.TOException;
 import me.kingtux.tuxorm.TOUtils;
+import me.kingtux.tuxorm.annotations.DataType;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.MultipleValueSerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
@@ -17,6 +21,7 @@ import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,29 +30,35 @@ import static me.kingtux.tuxorm.TOUtils.*;
 public class ListSerializer implements MultipleValueSerializer<List<?>> {
     private TOConnection connection;
     private static final String CHILD = "child";
+
     public ListSerializer(TOConnection connection) {
         this.connection = connection;
     }
 
     @Override
-    public void insert(List<?> objects, Table table, Object parentID, Field field) {
+    public void insert(List<?> objects, SQLTable table, Object parentID, Field field) {
         Class<?> firstType = TOUtils.getFirstTypeParam(field);
         if (isBasic(firstType) || isSemiBasic(firstType)) {
             for (Object object : objects) {
-                table.insertAll(parentID, TOUtils.simplifyObject(object));
+                table.insert().value(PARENT_ID_NAME, parentID).value(CHILD, TOUtils.simplifyObject(object)).execute().queue();
             }
         } else {
             for (Object object : objects) {
                 SecondarySerializer ss = connection.getSecondarySerializer(object.getClass());
                 if (ss == null) {
-                    table.insertAll(parentID, connection.getPrimaryValue(object));
+                    table.insert().value(PARENT_ID_NAME, parentID).value(CHILD, connection.getPrimaryValue(object)).execute().queue();
+
                 } else {
                     if (ss instanceof SingleSecondarySerializer) {
-                        table.insertAll(parentID, ((SingleSecondarySerializer) ss).getSimplifiedValue(object));
+                        table.insert().value(PARENT_ID_NAME, parentID).value(CHILD, ((SingleSecondarySerializer) ss).getSimplifiedValue(object)).execute().queue();
                     } else if (ss instanceof MultiSecondarySerializer) {
-                        Map<Column, Object> o = ((MultiSecondarySerializer) ss).getValues(object, table);
-                        o.put(table.getColumnByName(PARENT_ID_NAME), parentID);
-                        table.insert(o);
+                        Map<SQLColumn, Object> o = ((MultiSecondarySerializer) ss).getValues(object, table);
+                        o.put(table.getColumn(PARENT_ID_NAME), parentID);
+                        InsertStatement insertStatement = table.insert();
+                        o.forEach((sqlColumn, o1) -> {
+                            insertStatement.value(sqlColumn.getName(), o1);
+                        });
+                        insertStatement.execute().queue();
                     }
                 }
             }
@@ -55,19 +66,19 @@ public class ListSerializer implements MultipleValueSerializer<List<?>> {
     }
 
     @Override
-    public List<?> build(DBResult set, Field field) {
+    public List<?> build(DBSelect set, Field field) {
         List<Object> value = new ArrayList<>();
         Class<?> firstType = TOUtils.getFirstTypeParam(field);
 
         if (isBasic(firstType) || isSemiBasic(firstType)) {
             for (DBRow row : set) {
-                value.add(TOUtils.rebuildObject(TOUtils.getFirstTypeParam(field), row.getRowItem(CHILD).getAsObject()));
-                }
+                value.add(TOUtils.rebuildObject(TOUtils.getFirstTypeParam(field), row.getRow(CHILD).getAsObject()));
+            }
         } else if (connection.getSecondarySerializer(firstType) != null) {
             SecondarySerializer secondarySerializer = connection.getSecondarySerializer(firstType);
             if (secondarySerializer instanceof SingleSecondarySerializer) {
                 for (DBRow row : set) {
-                    value.add(((SingleSecondarySerializer) secondarySerializer).buildFromSimplifiedValue(row.getRowItem(CHILD).getAsObject()));
+                    value.add(((SingleSecondarySerializer) secondarySerializer).buildFromSimplifiedValue(row.getRow(CHILD).getAsObject()));
                 }
             } else if (secondarySerializer instanceof MultiSecondarySerializer) {
                 MultiSecondarySerializer mssCompatible = (MultiSecondarySerializer) secondarySerializer;
@@ -77,14 +88,14 @@ public class ListSerializer implements MultipleValueSerializer<List<?>> {
             }
         } else {
             for (DBRow row : set) {
-                value.add(TOUtils.quickGet(field.getType(), row.getRowItem(CHILD).getAsObject(), connection));
+                value.add(TOUtils.quickGet(field.getType(), row.getRow(CHILD).getAsObject(), connection));
             }
         }
         return value;
     }
 
     @Override
-    public Table createTable(String name, Field field, DataType parentDataType) {
+    public SQLTable createTable(String name, Field field, SQLDataType parentDataType) {
         SQLBuilder builder = connection.getBuilder();
         TableBuilder tableBuilder = TOUtils.basicTable(builder, name, parentDataType);
 
@@ -92,7 +103,7 @@ public class ListSerializer implements MultipleValueSerializer<List<?>> {
         SecondarySerializer ss = connection.getSecondarySerializer(firstType);
 
         if (isBasic(firstType) || isSemiBasic(firstType)) {
-            tableBuilder.addColumn(builder.createColumn().name(CHILD).type(TOUtils.getColumnType(firstType)).build());
+            tableBuilder.addColumn(builder.createColumn().name(CHILD).setDataType(TOUtils.getColumnType(firstType)));
         } else if (ss instanceof SingleSecondarySerializer) {
             tableBuilder.addColumn(((SingleSecondarySerializer) ss).createColumn(CHILD));
         } else if (ss instanceof MultiSecondarySerializer) {
@@ -102,16 +113,16 @@ public class ListSerializer implements MultipleValueSerializer<List<?>> {
             if (ss instanceof MultiSecondarySerializer) {
                 MultiSecondarySerializer smss = ((MultiSecondarySerializer) ss);
                 for (Object c : smss.getColumns()) {
-                    tableBuilder.addColumn((Column) c);
+                    tableBuilder.addColumn((ColumnBuilder) c);
 
                 }
             } else {
                 throw new IllegalArgumentException("This MSS is incompatible with SubMSS");
             }
         } else {
-            tableBuilder.addColumn(builder.createColumn().name(CHILD).type(TOUtils.getColumnType(connection.getPrimaryType(firstType))).build());
+            tableBuilder.addColumn(builder.createColumn().name(CHILD).setDataType(TOUtils.getColumnType(connection.getPrimaryType(firstType))));
         }
-        return tableBuilder.build();
+        return tableBuilder.createTable();
     }
 
 
@@ -121,7 +132,7 @@ public class ListSerializer implements MultipleValueSerializer<List<?>> {
     }
 
     @Override
-    public List<Object> contains(Object o, Table table) {
+    public List<Object> contains(Object o, SQLTable table) {
         return TOUtils.contains(o, table, connection, CHILD);
     }
 }

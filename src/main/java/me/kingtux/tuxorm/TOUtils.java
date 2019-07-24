@@ -1,12 +1,13 @@
 package me.kingtux.tuxorm;
 
-import me.kingtux.tuxjsql.core.CommonDataTypes;
-import me.kingtux.tuxjsql.core.DataType;
-import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.builders.SQLBuilder;
-import me.kingtux.tuxjsql.core.builders.TableBuilder;
-import me.kingtux.tuxjsql.core.result.DBResult;
-import me.kingtux.tuxjsql.core.result.DBRow;
+import dev.tuxjsql.basic.sql.BasicDataTypes;
+import dev.tuxjsql.core.builders.SQLBuilder;
+import dev.tuxjsql.core.builders.TableBuilder;
+import dev.tuxjsql.core.response.DBRow;
+import dev.tuxjsql.core.response.DBSelect;
+import dev.tuxjsql.core.sql.SQLDataType;
+import dev.tuxjsql.core.sql.SQLTable;
+
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
@@ -47,19 +48,19 @@ public class TOUtils {
         return isBasic(e) || isSemiBasic(e);
     }
 
-    public static DataType getColumnType(Class<?> type) {
+    public static SQLDataType getColumnType(Class<?> type) {
         if (type == String.class) {
-            return CommonDataTypes.TEXT;
+            return BasicDataTypes.TEXT;
         } else if (type == int.class || type == Integer.class) {
-            return CommonDataTypes.INT;
+            return BasicDataTypes.INTEGER;
         } else if (type == double.class || type == Double.class) {
-            return CommonDataTypes.DOUBLE;
+            return BasicDataTypes.REAL;
         } else if (type == long.class || type == Long.class) {
-            return CommonDataTypes.BIGINT;
+            return BasicDataTypes.INTEGER;
         } else if (type == boolean.class || type == Boolean.class) {
-            return CommonDataTypes.TEXT;
+            return BasicDataTypes.TEXT;
         }
-        return CommonDataTypes.TEXT;
+        return BasicDataTypes.TEXT;
     }
 
     //These Two Methods goal is to turn kinda simple types to simple types
@@ -94,7 +95,7 @@ public class TOUtils {
                     TOConnection.logger.debug(String.format("%s Type is %s", field.getDeclaringClass().getName(), clazz));
                 return field.getDeclaringClass().getClassLoader().loadClass(clazz);
             } catch (ClassNotFoundException e) {
-                TOConnection.logger.error("Unable to locate class",e);
+                TOConnection.logger.error("Unable to locate class", e);
                 return null;
             }
         } else {
@@ -113,12 +114,13 @@ public class TOUtils {
         return dao.findByID(id);
     }
 
-    public static TableBuilder basicTable(SQLBuilder builder, String name, DataType parentDataType) {
-        TableBuilder tableBuilder = builder.createTable().name(name);
-        tableBuilder.addColumn(builder.createColumn().name("id").primary(true).autoIncrement(true).type(CommonDataTypes.INT).build());
-        tableBuilder.addColumn(builder.createColumn().name(PARENT_ID_NAME).type(parentDataType).build());
+    public static TableBuilder basicTable(SQLBuilder builder, String name, SQLDataType parentDataType) {
+        TableBuilder tableBuilder = builder.createTable().setName(name);
+        tableBuilder.addColumn(builder.createColumn().name("id").primaryKey().autoIncrement().setDataType(BasicDataTypes.INTEGER));
+        tableBuilder.addColumn(builder.createColumn().name(PARENT_ID_NAME).setDataType(parentDataType));
         return tableBuilder;
     }
+
     @SuppressWarnings("unchecked")
     public static Object rebuildObject(Class<?> type, Object o) {
         if (type == Boolean.class || type == boolean.class) {
@@ -164,24 +166,22 @@ public class TOUtils {
     }
 
 
+    public static List<Object> contains(Object o, SQLTable table, TOConnection connection, String key) {
 
-
-    public static List<Object> contains(Object o, Table table, TOConnection connection, String key) {
-
-        DBResult result = null;
+        DBSelect result = null;
         if (isAnyTypeBasic(o.getClass())) {
-            result = table.select(connection.getBuilder().createWhere().start(key, o));
+            result = table.select().where().start(key, o).and().execute().complete();
 
         } else {
             SecondarySerializer ss = connection.getSecondarySerializer(o.getClass());
             if (ss == null) {
-                result = table.select(connection.getBuilder().createWhere().start(key, connection.getPrimaryValue(o)));
+                result = table.select().where().start(key, connection.getPrimaryValue(o)).and().execute().complete();
             } else {
                 if (ss instanceof SingleSecondarySerializer) {
-                    result = table.select(connection.getBuilder().createWhere().start(key, ((SingleSecondarySerializer) ss).getSimplifiedValue(o)));
+                    result = table.select().where().start(key, ((SingleSecondarySerializer) ss).getSimplifiedValue(o)).and().execute().complete();
                 } else if (ss instanceof MultiSecondarySerializer) {
                     MultiSecondarySerializer mssCompatible = (MultiSecondarySerializer) ss;
-                    result = table.select(mssCompatible.where(o, table));
+                    result = table.select().where(mssCompatible.where(o, table)).execute().complete();
                 }
             }
         }
@@ -190,10 +190,10 @@ public class TOUtils {
         return ids(result, o);
     }
 
-    public static List<Object> ids(DBResult result, Object o) {
+    public static List<Object> ids(DBSelect result, Object o) {
         List<Object> objects = new ArrayList<>();
         for (DBRow row : result) {
-            objects.add(rebuildObject(o.getClass(), row.getRowItem(PARENT_ID_NAME).getAsObject()));
+            objects.add(rebuildObject(o.getClass(), row.getRow(PARENT_ID_NAME).getAsObject()));
         }
 
         return objects;

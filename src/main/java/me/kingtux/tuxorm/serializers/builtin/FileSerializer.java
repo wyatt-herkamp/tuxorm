@@ -1,7 +1,9 @@
 package me.kingtux.tuxorm.serializers.builtin;
 
-import me.kingtux.tuxjsql.core.Column;
-import me.kingtux.tuxjsql.core.CommonDataTypes;
+
+import dev.tuxjsql.basic.sql.BasicDataTypes;
+import dev.tuxjsql.core.builders.ColumnBuilder;
+import dev.tuxjsql.core.sql.SQLColumn;
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 
@@ -25,7 +27,7 @@ public class FileSerializer implements SingleSecondarySerializer<File, String> {
     }
 
     @Override
-    public Column createColumn(String name) {
-        return connection.getBuilder().createColumn().name(name).type(CommonDataTypes.TEXT).build();
+    public ColumnBuilder createColumn(String name) {
+        return connection.getBuilder().createColumn().name(name).setDataType(BasicDataTypes.TEXT);
     }
 }

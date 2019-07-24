@@ -1,6 +1,7 @@
 package me.kingtux.tuxorm;
 
-import me.kingtux.tuxjsql.core.builders.SQLBuilder;
+import dev.tuxjsql.core.TuxJSQL;
+import dev.tuxjsql.core.builders.SQLBuilder;
 import me.kingtux.tuxorm.daos.DefaultSerializerDao;
 import me.kingtux.tuxorm.daos.PrimarySerializerDao;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
@@ -24,7 +25,7 @@ import java.util.Map;
  * This allows you to register classes, registerSerializers, and createDaos
  */
 public class TOConnection {
-    private SQLBuilder builder;
+    private TuxJSQL tuxJSQL;
     Map<Class, PrimarySerializer> primarySerializers = new HashMap<>();
     Map<Class<?>, SecondarySerializer> secondarySerializers = new HashMap<>();
     private DefaultSerializer defaultSerializer;
@@ -36,18 +37,18 @@ public class TOConnection {
      * We need a TuxJSQL SQLBuilder.
      * <a href="https://github.com/wherkamp/tuxjsql/wiki/Creating-your-first-TuxJSQL-SQLBuilder">Tutorial on creating a SQLBuilder. </a>
      *
-     * @param builder a TuxJSQL SQLBuilder
+     * @param tuxJSQL a TuxJSQL SQLBuilder
      */
-    public TOConnection(SQLBuilder builder) {
+    public TOConnection(TuxJSQL tuxJSQL) {
         registerSecondarySerializer(List.class, new ListSerializer(this));
         registerSecondarySerializer(File.class, new FileSerializer(this));
         registerSecondarySerializer(Map.class, new MapSerializer(this));
         defaultSerializer = new DefaultSerializer(this);
-        this.builder = builder;
+        this.tuxJSQL = tuxJSQL;
     }
 
     public SQLBuilder getBuilder() {
-        return builder;
+        return tuxJSQL.getBuilder();
     }
 
     public Class<?> getPrimaryType(Class<?> firstType) {

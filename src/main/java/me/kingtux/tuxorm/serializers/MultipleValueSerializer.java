@@ -1,8 +1,10 @@
 package me.kingtux.tuxorm.serializers;
 
-import me.kingtux.tuxjsql.core.Column;
-import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.result.DBRow;
+import dev.tuxjsql.core.builders.ColumnBuilder;
+import dev.tuxjsql.core.response.DBColumnItem;
+import dev.tuxjsql.core.response.DBRow;
+import dev.tuxjsql.core.sql.SQLColumn;
+import dev.tuxjsql.core.sql.SQLTable;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,17 +18,17 @@ import java.util.Map;
  */
 public interface MultipleValueSerializer<T> extends MultiSecondarySerializer<T> {
 
-    List<Object> contains(Object o, Table table);
+    List<Object> contains(Object o, SQLTable table);
 
 
 
     //The defaults
-    default List<Column> getColumns(String after) {
+    default List<ColumnBuilder> getColumns(String after) {
         return Collections.emptyList();
     }
 
 
-    default Map<Column, Object> getValues(T t, Table table, String s) {
+    default Map<SQLColumn, Object> getValues(T t, SQLTable table, String s) {
         return Collections.emptyMap();
     }
 

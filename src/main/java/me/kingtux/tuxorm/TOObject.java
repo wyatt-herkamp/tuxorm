@@ -1,7 +1,8 @@
 package me.kingtux.tuxorm;
 
-import me.kingtux.tuxjsql.core.Column;
-import me.kingtux.tuxjsql.core.Table;
+import dev.tuxjsql.core.sql.SQLColumn;
+import dev.tuxjsql.core.sql.SQLTable;
+
 import me.kingtux.tuxorm.annotations.TableColumn;
 
 import java.lang.reflect.Field;
@@ -9,12 +10,12 @@ import java.util.Map;
 
 public class TOObject {
     private Class<?> type;
-    //The Main Table
-    private Table table;
+    //The Main SQLTable
+    private SQLTable table;
     //These are objects the go to another table.
-    private Map<Field, Table> otherObjects;
+    private Map<Field, SQLTable> otherObjects;
 
-    public TOObject(Class<?> type, Table table, Map<Field, Table> otherObjects) {
+    public TOObject(Class<?> type, SQLTable table, Map<Field, SQLTable> otherObjects) {
         this.type = type;
         this.table = table;
         this.otherObjects = otherObjects;
@@ -28,24 +29,24 @@ public class TOObject {
         this.type = type;
     }
 
-    public Table getTable() {
+    public SQLTable getTable() {
         return table;
     }
 
-    public void setTable(Table table) {
+    public void setTable(SQLTable table) {
         this.table = table;
     }
 
-    public Map<Field, Table> getOtherObjects() {
+    public Map<Field, SQLTable> getOtherObjects() {
         return otherObjects;
     }
 
-    public void setOtherObjects(Map<Field, Table> otherObjects) {
+    public void setOtherObjects(Map<Field, SQLTable> otherObjects) {
         this.otherObjects = otherObjects;
     }
 
-    public Column getColumnForField(Field field) {
-        return table.getColumnByName(TOUtils.getColumnNameByField(field));
+    public SQLColumn getColumnForField(Field field) {
+        return table.getColumn(TOUtils.getColumnNameByField(field));
     }
 
     public Field getFieldForColumnName(String columnName) {

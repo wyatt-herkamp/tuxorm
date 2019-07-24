@@ -1,9 +1,10 @@
 package me.kingtux.tuxorm.daos;
 
-import me.kingtux.tuxjsql.core.Table;
-import me.kingtux.tuxjsql.core.result.DBResult;
-import me.kingtux.tuxjsql.core.result.DBRow;
-import me.kingtux.tuxjsql.core.statements.WhereStatement;
+import dev.tuxjsql.core.response.DBRow;
+import dev.tuxjsql.core.response.DBSelect;
+import dev.tuxjsql.core.sql.SQLTable;
+import dev.tuxjsql.core.sql.where.WhereStatement;
+
 import me.kingtux.tuxorm.*;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.MultipleValueSerializer;
@@ -42,7 +43,7 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
 
     @Override
     public T create(T t) {
-        if(t==null){
+        if (t == null) {
             throw new NullPointerException("You can't insert null into db");
         }
         I id = (I) defaultSerializer.create(t, toObject);
@@ -78,11 +79,11 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
             } else if (secondarySerializer instanceof MultiSecondarySerializer) {
                 if (secondarySerializer instanceof MultipleValueSerializer) {
                     column = toObject.getTable().getPrimaryColumn().getName();
-                    Table table = toObject.getOtherObjects().get(field);
+                    SQLTable table = toObject.getOtherObjects().get(field);
                     v = ((MultipleValueSerializer) secondarySerializer).contains(value, table);
                 } else {
                     WhereStatement whereStatement = ((MultiSecondarySerializer) secondarySerializer).where(value, toObject.getOtherObjects().get(field));
-                    DBResult result = toObject.getOtherObjects().get(field).select(whereStatement);
+                    DBSelect result = toObject.getOtherObjects().get(field).select().where(whereStatement).execute().complete();
                     v = TOUtils.ids(result, value);
                     column = toObject.getTable().getPrimaryColumn().getName();
                 }
@@ -103,15 +104,15 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
     }
 
     public List<T> fetch(WhereStatement statement) {
-        DBResult dbRows = toObject.getTable().select(statement);
+        DBSelect dbRows = toObject.getTable().select().where(statement).execute().complete();
         List<TOResult> results = new ArrayList<>();
         for (DBRow row : dbRows) {
             TableResult tr = new TableResult(row, toObject.getTable());
             Map<Field, TableResult> map = new HashMap<>();
-            for (Map.Entry<Field, Table> entry : toObject.getOtherObjects().entrySet()) {
-                Object object = TOUtils.simplifyObject(tr.getRow().getRowItem(toObject.getTable().getPrimaryColumn().getName()).getAsObject());
-                DBResult result = entry.getValue().select(connection.getBuilder().createWhere().start(TOUtils.PARENT_ID_NAME
-                        , object));
+            for (Map.Entry<Field, SQLTable> entry : toObject.getOtherObjects().entrySet()) {
+                Object object = TOUtils.simplifyObject(tr.getRow().getRow(toObject.getTable().getPrimaryColumn().getName()).getAsObject());
+                DBSelect result = entry.getValue().select().where().start(TOUtils.PARENT_ID_NAME
+                        , object).and().execute().complete();
                 TableResult subResult =
                         new TableResult(entry.getValue(), result);
                 map.put(entry.getKey(), subResult);
@@ -128,7 +129,7 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
 
     @Override
     public void delete(T t) {
-        if(t==null){
+        if (t == null) {
             throw new NullPointerException("You cant delete null");
         }
         defaultSerializer.delete(t, toObject);
