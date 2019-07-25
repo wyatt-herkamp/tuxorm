@@ -128,6 +128,9 @@ public final class DefaultSerializer {
                 statement.value(sqlColumn.getName(), o);
             });
             DBInsert insertResult = statement.execute().complete();
+            if(insertResult==null){
+                throw new TOException("Unable to get insert into database");
+            }
             if (primaryKeyValue == null) primaryKeyValue = insertResult.primaryKey();
 
             for (Map.Entry<Field, SQLTable> extraTables : toObject.getOtherObjects().entrySet()) {

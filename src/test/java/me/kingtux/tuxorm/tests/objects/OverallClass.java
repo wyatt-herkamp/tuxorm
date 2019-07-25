@@ -17,7 +17,7 @@ public class OverallClass {
     private long createdOn = System.currentTimeMillis();
     @TableColumn
     private long updatedLast = System.currentTimeMillis();
-    @TableColumn(useDefault = true)
+    @TableColumn()
     private String name = "GAY";
     @TableColumn
     private SecondObject object;

@@ -124,7 +124,7 @@ public class TOUtils {
     @SuppressWarnings("unchecked")
     public static Object rebuildObject(Class<?> type, Object o) {
         if (type == Boolean.class || type == boolean.class) {
-            return ((int) o) == 1;
+            return (Integer.parseInt(o.toString())) == 1;
         } else if (type == UUID.class) {
             return UUID.fromString(((String) o));
         } else if (type.isEnum()) {
