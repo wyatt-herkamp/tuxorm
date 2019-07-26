@@ -10,6 +10,7 @@ import dev.tuxjsql.core.sql.SQLTable;
 
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
+import me.kingtux.tuxorm.exceptions.MissingValueException;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
 import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
@@ -188,6 +189,7 @@ public class TOUtils {
             }
         }catch (InterruptedException e){
             TOConnection.logger.error("Unable to get value",e);
+            Thread.currentThread().interrupt();
         }
         if (result == null) return Collections.emptyList();
 
@@ -197,7 +199,7 @@ public class TOUtils {
     public static List<Object> ids(DBSelect result, Object o) {
         List<Object> objects = new ArrayList<>();
         for (DBRow row : result) {
-            objects.add(rebuildObject(o.getClass(), row.getColumn(PARENT_ID_NAME).get().getAsObject()));
+            objects.add(rebuildObject(o.getClass(), row.getColumn(PARENT_ID_NAME).orElseThrow(()-> new MissingValueException("Unable to locate "+ PARENT_ID_NAME)).getAsObject()));
         }
 
         return objects;

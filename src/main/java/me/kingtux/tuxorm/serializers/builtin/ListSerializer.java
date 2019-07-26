@@ -14,6 +14,7 @@ import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.TOException;
 import me.kingtux.tuxorm.TOUtils;
 import me.kingtux.tuxorm.annotations.DataType;
+import me.kingtux.tuxorm.exceptions.MissingValueException;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.MultipleValueSerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
@@ -21,7 +22,6 @@ import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,9 +55,7 @@ public class ListSerializer implements MultipleValueSerializer<List<?>> {
                         Map<SQLColumn, Object> o = ((MultiSecondarySerializer) ss).getValues(object, table);
                         o.put(table.getColumn(PARENT_ID_NAME), parentID);
                         InsertStatement insertStatement = table.insert();
-                        o.forEach((sqlColumn, o1) -> {
-                            insertStatement.value(sqlColumn.getName(), o1);
-                        });
+                        o.forEach((sqlColumn, o1) -> insertStatement.value(sqlColumn.getName(), o1));
                         insertStatement.execute().queue();
                     }
                 }
@@ -72,7 +70,7 @@ public class ListSerializer implements MultipleValueSerializer<List<?>> {
 
         if (isBasic(firstType) || isSemiBasic(firstType)) {
             for (DBRow row : set) {
-                value.add(TOUtils.rebuildObject(TOUtils.getFirstTypeParam(field), row.getColumn(CHILD).get().getAsObject()));
+                value.add(TOUtils.rebuildObject(TOUtils.getFirstTypeParam(field), row.getColumn(CHILD).orElseThrow(()-> new MissingValueException(CHILD+ " is misisng from your system")).getAsObject()));
             }
         } else if (connection.getSecondarySerializer(firstType) != null) {
             SecondarySerializer secondarySerializer = connection.getSecondarySerializer(firstType);
@@ -88,7 +86,7 @@ public class ListSerializer implements MultipleValueSerializer<List<?>> {
             }
         } else {
             for (DBRow row : set) {
-                value.add(TOUtils.quickGet(field.getType(), row.getColumn(CHILD).get().getAsObject(), connection));
+                value.add(TOUtils.quickGet(field.getType(), row.getColumn(CHILD).orElseThrow(()-> new MissingValueException(CHILD+ " is misisng from your system")).getAsObject(), connection));
             }
         }
         return value;

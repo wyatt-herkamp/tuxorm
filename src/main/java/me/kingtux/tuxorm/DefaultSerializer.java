@@ -10,6 +10,7 @@ import dev.tuxjsql.core.sql.SQLColumn;
 import dev.tuxjsql.core.sql.SQLTable;
 import dev.tuxjsql.core.sql.UpdateStatement;
 import me.kingtux.tuxorm.annotations.TableColumn;
+import me.kingtux.tuxorm.exceptions.MissingValueException;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
 import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
@@ -75,24 +76,23 @@ public final class DefaultSerializer {
             //insert
             UpdateStatement statement = toObject.getTable().update().where().start(toObject.getTable().getPrimaryColumn().getName(), primaryKeyValue).and();
             update.forEach((sqlColumn, o) -> statement.value(sqlColumn.getName(), o));
-            try {
-                statement.execute().complete();
-            } catch (InterruptedException e) {
-                TOConnection.logger.error("Unable to get value",e);
-            }
+            statement.execute().complete();
+
             for (Map.Entry<Field, SQLTable> extraTables : toObject.getOtherObjects().entrySet()) {
                 MultiSecondarySerializer mss = (MultiSecondarySerializer) toConnection.getSecondarySerializer(extraTables.getKey().getType());
                 mss.insert(extraTables.getKey().get(value), extraTables.getValue(), primaryKeyValue, extraTables.getKey());
             }
         } catch (IllegalAccessException e) {
             TOConnection.logger.error("Unable to access field", e);
+        } catch (InterruptedException e) {
+            TOConnection.logger.error("Unable to get value", e);
+            Thread.currentThread().interrupt();
         }
     }
 
     public Object create(Object value, TOObject toObject) {
         TOValidator.validateCreate(value, toObject);
         Object primaryKeyValue = null;
-        String primaryKeyName = "";
         try {
             Map<SQLColumn, Object> insert = new HashMap<>();
             for (Field field : value.getClass().getDeclaredFields()) {
@@ -104,7 +104,6 @@ public final class DefaultSerializer {
 
                         primaryKeyValue = field.get(value);
                     } else {
-                        primaryKeyName = TOUtils.getColumnNameByField(field);
                         continue;
                     }
                 }
@@ -128,12 +127,10 @@ public final class DefaultSerializer {
             }
 
             InsertStatement statement = toObject.getTable().insert();
-            insert.forEach((sqlColumn, o) -> {
-                statement.value(sqlColumn.getName(), o);
-            });
+            insert.forEach((sqlColumn, o) -> statement.value(sqlColumn.getName(), o));
             DBInsert insertResult;
             insertResult = statement.execute().complete();
-            if(insertResult==null){
+            if (insertResult == null) {
                 throw new TOException("Unable to get insert into database");
             }
             if (primaryKeyValue == null) primaryKeyValue = insertResult.primaryKey();
@@ -145,7 +142,8 @@ public final class DefaultSerializer {
         } catch (IllegalAccessException e) {
             TOConnection.logger.error("Unable to access variable", e);
         } catch (InterruptedException e) {
-            TOConnection.logger.error("Unable to get value",e);
+            TOConnection.logger.error("Unable to get value", e);
+            Thread.currentThread().interrupt();
         }
         return primaryKeyValue;
     }
@@ -199,7 +197,6 @@ public final class DefaultSerializer {
         SQLTable table = tableBuilder.createTable();
         if (table.getPrimaryColumn() == null) throw new TOException("All TuxORM objects must have a Primary Key");
         objects.put(tableClass, new TOObject(tableClass, table, extraTables));
-//        extraTables.forEach((field, t) -> t.c());
     }
 
     public ColumnBuilder createColumn(Field field) {
@@ -240,10 +237,10 @@ public final class DefaultSerializer {
 
                 if (toResult.getExtraTables().containsKey(field)
                         || tc == null ||
-                        toResult.getPrimaryTable().getRow().getColumn(object.getColumnForField(field).getName()).get().getAsObject() == null)
+                        toResult.getPrimaryTable().getRow().getColumn(object.getColumnForField(field).getName()).orElseThrow(() -> new MissingValueException("Missing Value: " + object.getColumnForField(field).getName())).getAsObject() == null)
                     continue;
 
-                Object value = toResult.getPrimaryTable().getRow().getColumn(object.getColumnForField(field).getName()).get().getAsObject();
+                Object value = toResult.getPrimaryTable().getRow().getColumn(object.getColumnForField(field).getName()).orElseThrow(() -> new MissingValueException("Missing Value: " + object.getColumnForField(field).getName())).getAsObject();
 
                 if (isAnyTypeBasic(field.getType())) {
                     field.set(t, rebuildObject(field.getType(), value));
