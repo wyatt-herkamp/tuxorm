@@ -79,8 +79,8 @@ public class MapSerializer implements MultipleValueSerializer<Map<?, ?>> {
         Class<?> type2 = TOUtils.getTypeParamAt(field, 1);
         Map<Object, Object> values = new HashMap<>();
         for (DBRow row : set) {
-            Object o =getBuild(row.getRow(KEY), type1, row, KEY);
-            Object o2 =getBuild(row.getRow(VALUE), type2, row, VALUE);
+            Object o =getBuild(row.getColumn(KEY).get(), type1, row, KEY);
+            Object o2 =getBuild(row.getColumn(VALUE).get(), type2, row, VALUE);
             values.put(o, o2);
         }
         return values;

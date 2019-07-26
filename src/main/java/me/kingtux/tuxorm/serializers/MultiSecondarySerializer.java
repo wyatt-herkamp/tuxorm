@@ -30,7 +30,11 @@ public interface MultiSecondarySerializer<T> extends SecondarySerializer<T> {
 
 
     default void delete(Object parentID, Field field, SQLTable table) {
-        table.delete().where().start(TOUtils.PARENT_ID_NAME, TOUtils.simplifyObject(parentID)).and().execute().complete();
+        try {
+            table.delete().where().start(TOUtils.PARENT_ID_NAME, TOUtils.simplifyObject(parentID)).and().execute().complete();
+        } catch (InterruptedException e) {
+            TOConnection.logger.error("Unable to get value",e);
+        }
     }
 
     default WhereStatement where(T o, SQLTable table) {

@@ -83,7 +83,12 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
                     v = ((MultipleValueSerializer) secondarySerializer).contains(value, table);
                 } else {
                     WhereStatement whereStatement = ((MultiSecondarySerializer) secondarySerializer).where(value, toObject.getOtherObjects().get(field));
-                    DBSelect result = toObject.getOtherObjects().get(field).select().where(whereStatement).execute().complete();
+                    DBSelect result=null;
+                    try {
+                        result = toObject.getOtherObjects().get(field).select().where(whereStatement).execute().complete();
+                    } catch (InterruptedException e) {
+                        TOConnection.logger.error("Unable to get value",e);
+                    }
                     v = TOUtils.ids(result, value);
                     column = toObject.getTable().getPrimaryColumn().getName();
                 }
@@ -104,15 +109,26 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
     }
 
     public List<T> fetch(WhereStatement statement) {
-        DBSelect dbRows = toObject.getTable().select().where(statement).execute().complete();
+        DBSelect dbRows = null;
+        try {
+            dbRows = toObject.getTable().select().where(statement).execute().complete();
+        } catch (InterruptedException e) {
+            TOConnection.logger.error("Unable to get value",e);
+        }
         List<TOResult> results = new ArrayList<>();
         for (DBRow row : dbRows) {
             TableResult tr = new TableResult(row, toObject.getTable());
             Map<Field, TableResult> map = new HashMap<>();
             for (Map.Entry<Field, SQLTable> entry : toObject.getOtherObjects().entrySet()) {
-                Object object = TOUtils.simplifyObject(tr.getRow().getRow(toObject.getTable().getPrimaryColumn().getName()).getAsObject());
-                DBSelect result = entry.getValue().select().where().start(TOUtils.PARENT_ID_NAME
-                        , object).and().execute().complete();
+                Object object = TOUtils.simplifyObject(tr.getRow().getColumn(toObject.getTable().getPrimaryColumn().getName()).get().getAsObject());
+                DBSelect result;
+                try {
+                    result = entry.getValue().select().where().start(TOUtils.PARENT_ID_NAME
+                            , object).and().execute().complete();
+                } catch (InterruptedException e) {
+                    TOConnection.logger.error("Unable to get value",e);
+                    continue;
+                }
                 TableResult subResult =
                         new TableResult(entry.getValue(), result);
                 map.put(entry.getKey(), subResult);

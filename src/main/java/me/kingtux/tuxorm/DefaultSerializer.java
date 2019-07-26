@@ -75,7 +75,11 @@ public final class DefaultSerializer {
             //insert
             UpdateStatement statement = toObject.getTable().update().where().start(toObject.getTable().getPrimaryColumn().getName(), primaryKeyValue).and();
             update.forEach((sqlColumn, o) -> statement.value(sqlColumn.getName(), o));
-            statement.execute().complete();
+            try {
+                statement.execute().complete();
+            } catch (InterruptedException e) {
+                TOConnection.logger.error("Unable to get value",e);
+            }
             for (Map.Entry<Field, SQLTable> extraTables : toObject.getOtherObjects().entrySet()) {
                 MultiSecondarySerializer mss = (MultiSecondarySerializer) toConnection.getSecondarySerializer(extraTables.getKey().getType());
                 mss.insert(extraTables.getKey().get(value), extraTables.getValue(), primaryKeyValue, extraTables.getKey());
@@ -127,7 +131,8 @@ public final class DefaultSerializer {
             insert.forEach((sqlColumn, o) -> {
                 statement.value(sqlColumn.getName(), o);
             });
-            DBInsert insertResult = statement.execute().complete();
+            DBInsert insertResult;
+            insertResult = statement.execute().complete();
             if(insertResult==null){
                 throw new TOException("Unable to get insert into database");
             }
@@ -139,6 +144,8 @@ public final class DefaultSerializer {
             }
         } catch (IllegalAccessException e) {
             TOConnection.logger.error("Unable to access variable", e);
+        } catch (InterruptedException e) {
+            TOConnection.logger.error("Unable to get value",e);
         }
         return primaryKeyValue;
     }
@@ -233,10 +240,10 @@ public final class DefaultSerializer {
 
                 if (toResult.getExtraTables().containsKey(field)
                         || tc == null ||
-                        toResult.getPrimaryTable().getRow().getRow(object.getColumnForField(field).getName()).getAsObject() == null)
+                        toResult.getPrimaryTable().getRow().getColumn(object.getColumnForField(field).getName()).get().getAsObject() == null)
                     continue;
 
-                Object value = toResult.getPrimaryTable().getRow().getRow(object.getColumnForField(field).getName()).getAsObject();
+                Object value = toResult.getPrimaryTable().getRow().getColumn(object.getColumnForField(field).getName()).get().getAsObject();
 
                 if (isAnyTypeBasic(field.getType())) {
                     field.set(t, rebuildObject(field.getType(), value));

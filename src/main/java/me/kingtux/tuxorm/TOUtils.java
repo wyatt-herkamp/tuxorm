@@ -169,21 +169,25 @@ public class TOUtils {
     public static List<Object> contains(Object o, SQLTable table, TOConnection connection, String key) {
 
         DBSelect result = null;
-        if (isAnyTypeBasic(o.getClass())) {
-            result = table.select().where().start(key, o).and().execute().complete();
+        try {
+            if (isAnyTypeBasic(o.getClass())) {
+                result = table.select().where().start(key, o).and().execute().complete();
 
-        } else {
-            SecondarySerializer ss = connection.getSecondarySerializer(o.getClass());
-            if (ss == null) {
-                result = table.select().where().start(key, connection.getPrimaryValue(o)).and().execute().complete();
             } else {
-                if (ss instanceof SingleSecondarySerializer) {
-                    result = table.select().where().start(key, ((SingleSecondarySerializer) ss).getSimplifiedValue(o)).and().execute().complete();
-                } else if (ss instanceof MultiSecondarySerializer) {
-                    MultiSecondarySerializer mssCompatible = (MultiSecondarySerializer) ss;
-                    result = table.select().where(mssCompatible.where(o, table)).execute().complete();
+                SecondarySerializer ss = connection.getSecondarySerializer(o.getClass());
+                if (ss == null) {
+                    result = table.select().where().start(key, connection.getPrimaryValue(o)).and().execute().complete();
+                } else {
+                    if (ss instanceof SingleSecondarySerializer) {
+                        result = table.select().where().start(key, ((SingleSecondarySerializer) ss).getSimplifiedValue(o)).and().execute().complete();
+                    } else if (ss instanceof MultiSecondarySerializer) {
+                        MultiSecondarySerializer mssCompatible = (MultiSecondarySerializer) ss;
+                        result = table.select().where(mssCompatible.where(o, table)).execute().complete();
+                    }
                 }
             }
+        }catch (InterruptedException e){
+            TOConnection.logger.error("Unable to get value",e);
         }
         if (result == null) return Collections.emptyList();
 
@@ -193,7 +197,7 @@ public class TOUtils {
     public static List<Object> ids(DBSelect result, Object o) {
         List<Object> objects = new ArrayList<>();
         for (DBRow row : result) {
-            objects.add(rebuildObject(o.getClass(), row.getRow(PARENT_ID_NAME).getAsObject()));
+            objects.add(rebuildObject(o.getClass(), row.getColumn(PARENT_ID_NAME).get().getAsObject()));
         }
 
         return objects;

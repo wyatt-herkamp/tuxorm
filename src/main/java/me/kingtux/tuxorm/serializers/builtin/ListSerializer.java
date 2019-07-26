@@ -72,13 +72,13 @@ public class ListSerializer implements MultipleValueSerializer<List<?>> {
 
         if (isBasic(firstType) || isSemiBasic(firstType)) {
             for (DBRow row : set) {
-                value.add(TOUtils.rebuildObject(TOUtils.getFirstTypeParam(field), row.getRow(CHILD).getAsObject()));
+                value.add(TOUtils.rebuildObject(TOUtils.getFirstTypeParam(field), row.getColumn(CHILD).get().getAsObject()));
             }
         } else if (connection.getSecondarySerializer(firstType) != null) {
             SecondarySerializer secondarySerializer = connection.getSecondarySerializer(firstType);
             if (secondarySerializer instanceof SingleSecondarySerializer) {
                 for (DBRow row : set) {
-                    value.add(((SingleSecondarySerializer) secondarySerializer).buildFromSimplifiedValue(row.getRow(CHILD).getAsObject()));
+                    value.add(((SingleSecondarySerializer) secondarySerializer).buildFromSimplifiedValue(row.getColumn(CHILD).get().getAsObject()));
                 }
             } else if (secondarySerializer instanceof MultiSecondarySerializer) {
                 MultiSecondarySerializer mssCompatible = (MultiSecondarySerializer) secondarySerializer;
@@ -88,7 +88,7 @@ public class ListSerializer implements MultipleValueSerializer<List<?>> {
             }
         } else {
             for (DBRow row : set) {
-                value.add(TOUtils.quickGet(field.getType(), row.getRow(CHILD).getAsObject(), connection));
+                value.add(TOUtils.quickGet(field.getType(), row.getColumn(CHILD).get().getAsObject(), connection));
             }
         }
         return value;

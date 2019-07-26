@@ -69,7 +69,7 @@ public class TestSubMMS implements MultiSecondarySerializer<Item> {
 
     @Override
     public Item minorBuild(DBRow dbRows, String s) {
-        return new Item(dbRows.getRow("hey" + s).getAsString(), dbRows.getRow("item" + s).getAsInt());
+        return new Item(dbRows.getColumn("hey" + s).get().getAsString(), dbRows.getColumn("item" + s).get().getAsInt());
     }
 
 

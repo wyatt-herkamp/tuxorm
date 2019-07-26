@@ -19,20 +19,15 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TestMain {
-    private Properties properties = new Properties();
-
-    public TestMain() {
-        properties.setProperty("db.type", "dev.tuxjsql.sqlite.SQLiteBuilder");
-        properties.setProperty("db.file", "db.db");
-    }
 
 
-    public static void main(String[] args) {
-        new TestMain().baseTests();
-    }
+
 
     @Test
     public void baseTests() {
+         Properties properties = new Properties();
+        properties.setProperty("db.type", "dev.tuxjsql.sqlite.SQLiteBuilder");
+        properties.setProperty("db.file", "db.db");
         new File("db.db").deleteOnExit();
         TOConnection connection = new TOConnection(TuxJSQLBuilder.create(properties));
         connection.registerSecondarySerializer(Item.class, new TestSubMMS(connection));
@@ -100,15 +95,22 @@ public class TestMain {
     private Properties getLocalProperties() {
         Properties properties = new Properties();
         File file = new File(System.getProperty("user.home"), "mysql.properties");
-        if (!file.exists()) {
-            throw new RuntimeException("Please configure a mysql.properties in your home directory");
-        }
-        try {
-            properties.load(new FileReader(file));
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(!file.exists()){
+            //Probably Travis-CI
+            properties.setProperty("user","root");
+            properties.setProperty("password","");
+            properties.setProperty("db.db","test");
+            properties.setProperty("db.host","127.0.0.1:3306");
+
+        }else {
+            try {
+                properties.load(new FileReader(file));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return properties;
     }
+
 
 }
