@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestMain {
 
@@ -56,6 +57,9 @@ public class TestMain {
         assertNotNull(dao.fetchFirst("longs", 3L));
         assertNotNull(dao.fetchFirst("items", 45));
         assertNotNull(dao.fetchFirst("item", new Item("bob", 1234)));
+        assertTrue(dao.fetchAll().size()>=1);
+        assertNotNull(dao.fetchAll().get(0));
+
     }
 
     @Test
@@ -90,6 +94,8 @@ public class TestMain {
         assertNotNull(dao.fetchFirst("longs", 3L));
         assertNotNull(dao.fetchFirst("items", 45));
         assertNotNull(dao.fetchFirst("item", new Item("bob", 1234)));
+        assertTrue(dao.fetchAll().size()>=1);
+        assertNotNull(dao.fetchAll().get(0));
     }
 
     private Properties getLocalProperties() {

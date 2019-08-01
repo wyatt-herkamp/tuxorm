@@ -55,7 +55,7 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
 
     @Override
     public List<T> fetchAll() {
-        return fetch(null);
+        return fetch(connection.getBuilder().createWhere());
     }
 
     @Override
