@@ -1,9 +1,10 @@
 package me.kingtux.tuxorm;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface Dao<T, I> {
-    T findByID(I id);
+    Optional<T> findByID(I id);
 
     void update(T t);
 
@@ -19,10 +20,10 @@ public interface Dao<T, I> {
 
     List<T> fetch(String columnName, Object value);
 
-    default T fetchFirst(String columnName, Object value) {
+    default Optional<T> fetchFirst(String columnName, Object value) {
         List<T> t = fetch(columnName, value);
-        if (t == null || t.isEmpty()) return null;
-        return t.get(0);
+        if (t == null || t.isEmpty()) return Optional.empty();
+        return Optional.of(t.get(0));
     }
 
     void delete(T t);

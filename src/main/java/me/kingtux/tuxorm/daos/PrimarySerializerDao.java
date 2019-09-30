@@ -6,7 +6,8 @@ import me.kingtux.tuxorm.TOObject;
 import me.kingtux.tuxorm.serializers.PrimarySerializer;
 
 import java.util.List;
-//TODO set this up.
+import java.util.Optional;
+
 public class PrimarySerializerDao<T, I> implements Dao<T, I> {
     private Class<?> type;
     private PrimarySerializer primarySerializer;
@@ -19,7 +20,7 @@ public class PrimarySerializerDao<T, I> implements Dao<T, I> {
     }
 
     @Override
-    public T findByID(I id) {
+    public Optional<T> findByID(I id) {
         return null;
     }
 

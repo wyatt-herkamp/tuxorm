@@ -11,6 +11,7 @@ import dev.tuxjsql.core.sql.SQLTable;
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 import me.kingtux.tuxorm.exceptions.MissingValueException;
+import me.kingtux.tuxorm.exceptions.UnableToLocateException;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
 import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
@@ -112,7 +113,7 @@ public class TOUtils {
     public static <T> Object quickGet(Class<T> type, Object id, TOConnection connection) {
 
         Dao<T, Object> dao = connection.createDao(type);
-        return dao.findByID(id);
+        return dao.findByID(id).orElseThrow(()->new UnableToLocateException("Unable to get sub value"));
     }
 
     public static TableBuilder basicTable(SQLBuilder builder, String name, SQLDataType parentDataType) {

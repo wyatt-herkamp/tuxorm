@@ -8,6 +8,7 @@ import dev.tuxjsql.core.sql.where.WhereStatement;
 
 import me.kingtux.tuxorm.*;
 import me.kingtux.tuxorm.exceptions.MissingValueException;
+import me.kingtux.tuxorm.exceptions.UnableToLocateException;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.MultipleValueSerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
@@ -15,7 +16,7 @@ import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 
 import java.lang.reflect.Field;
 import java.util.*;
-
+@SuppressWarnings("unchecked")
 public class DefaultSerializerDao<T, I> implements Dao<T, I> {
     private TOObject toObject;
     private DefaultSerializer defaultSerializer;
@@ -28,7 +29,7 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
     }
 
     @Override
-    public T findByID(I id) {
+    public Optional<T> findByID(I id) {
         return fetchFirst(toObject.getTable().getPrimaryColumn().getName(), id);
     }
 
@@ -50,7 +51,9 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
         if (TOConnection.logger.isDebugEnabled())
             connection.getLogger().debug(id.toString());
 
-        return findByID(id);
+        return findByID(id).orElseThrow(() ->
+                new UnableToLocateException("Unable to locate something that was just put in")
+        );
     }
 
     @Override
@@ -121,8 +124,8 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
                 Map<Field, TableResult> map = new HashMap<>();
                 for (Map.Entry<Field, SQLTable> entry : toObject.getOtherObjects().entrySet()) {
                     Optional<DBColumnItem> columnItem = tr.getRow().getColumn(toObject.getTable().getPrimaryColumn().getName());
-                    if(!columnItem.isPresent()){
-                        throw new MissingValueException(toObject.getTable().getPrimaryColumn().getName()+" is missing from the table");
+                    if (!columnItem.isPresent()) {
+                        throw new MissingValueException(toObject.getTable().getPrimaryColumn().getName() + " is missing from the table");
                     }
                     Object object = TOUtils.simplifyObject(columnItem.get().getAsObject());
                     DBSelect result;
@@ -157,7 +160,7 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
 
     @Override
     public void deleteById(I t) {
-        delete(findByID(t));
+        delete(findByID(t).orElseThrow(() -> new UnableToLocateException("Unable to locate value to delete")));
     }
 
     @Override
@@ -177,6 +180,6 @@ public class DefaultSerializerDao<T, I> implements Dao<T, I> {
 
     @Override
     public T refresh(T t) {
-        return findByID((I) defaultSerializer.getPrimaryKey(t));
+        return findByID((I) defaultSerializer.getPrimaryKey(t)).orElseThrow(() -> new UnableToLocateException("Unable to locate refresh value"));
     }
 }
