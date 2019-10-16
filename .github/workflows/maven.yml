@@ -8,6 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: mirromutth/mysql-action@v1.1
+      with:
+        mysql root password: ''
+        mysql user: 'developer'
+        mysql password: 'password'
     - uses: actions/checkout@v1
     - name: Set up JDK 1.8
       uses: actions/setup-java@v1
