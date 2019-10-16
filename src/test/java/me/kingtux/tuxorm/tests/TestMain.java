@@ -22,11 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TestMain {
 
 
-
-
     @Test
     public void baseTests() {
-         Properties properties = new Properties();
+        Properties properties = new Properties();
         properties.setProperty("db.type", "dev.tuxjsql.sqlite.SQLiteBuilder");
         properties.setProperty("db.file", "db.db");
         new File("db.db").deleteOnExit();
@@ -57,7 +55,7 @@ public class TestMain {
         assertNotNull(dao.fetchFirst("longs", 3L));
         assertNotNull(dao.fetchFirst("items", 45));
         assertNotNull(dao.fetchFirst("item", new Item("bob", 1234)));
-        assertTrue(dao.fetchAll().size()>=1);
+        assertTrue(dao.fetchAll().size() >= 1);
         assertNotNull(dao.fetchAll().get(0));
 
     }
@@ -94,21 +92,21 @@ public class TestMain {
         assertNotNull(dao.fetchFirst("longs", 3L));
         assertNotNull(dao.fetchFirst("items", 45));
         assertNotNull(dao.fetchFirst("item", new Item("bob", 1234)));
-        assertTrue(dao.fetchAll().size()>=1);
+        assertTrue(dao.fetchAll().size() >= 1);
         assertNotNull(dao.fetchAll().get(0));
     }
 
     private Properties getLocalProperties() {
         Properties properties = new Properties();
         File file = new File(System.getProperty("user.home"), "mysql.properties");
-        if(!file.exists()){
-            //Probably Travis-CI
-            properties.setProperty("user","root");
-            properties.setProperty("password","");
-            properties.setProperty("db.db","test");
-            properties.setProperty("db.host","127.0.0.1:3306");
+        if (!file.exists()) {
+//Fixing Github Actions
+            properties.setProperty("user", "developer");
+            properties.setProperty("password", "password");
+            properties.setProperty("db.db", "test");
+            properties.setProperty("db.host", "127.0.0.1:3306");
 
-        }else {
+        } else {
             try {
                 properties.load(new FileReader(file));
             } catch (IOException e) {
