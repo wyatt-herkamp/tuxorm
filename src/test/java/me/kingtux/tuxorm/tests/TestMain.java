@@ -101,7 +101,7 @@ public class TestMain {
         File file = new File(System.getProperty("user.home"), "mysql.properties");
         if (!file.exists()) {
 //Fixing Github Actions
-            properties.setProperty("user", "developer");
+            properties.setProperty("user", "root");
             properties.setProperty("password", "password");
             properties.setProperty("db.db", "test");
             properties.setProperty("db.host", "127.0.0.1:3306");
