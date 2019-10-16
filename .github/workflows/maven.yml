@@ -27,4 +27,4 @@ jobs:
                                -Dsonar.projectKey=wherkamp_TuxORM \
                                -Dsonar.organization=wherkamp-github \
                                -Dsonar.host.url=https://sonarcloud.io \
-                               -Dsonar.login=4416153f01696dc2326b76f457be36e58cfc6b70 
+                               -Dsonar.login=${{ secrets.SONAR_TOKEN }} 
