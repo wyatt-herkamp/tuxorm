@@ -48,7 +48,15 @@ public class TOConnection {
     }
 
     public SQLBuilder getBuilder() {
-        return tuxJSQL.getBuilder();
+        return getTuxJSQL().getBuilder();
+    }
+
+    public TuxJSQL getTuxJSQL() {
+        return tuxJSQL;
+    }
+
+    public void close() {
+        getTuxJSQL().getProvider().close();
     }
 
     public Class<?> getPrimaryType(Class<?> firstType) {
@@ -61,7 +69,7 @@ public class TOConnection {
     }
 
     public Object getPrimaryValue(Object object) {
-        if(object == null){
+        if (object == null) {
             throw new NullPointerException("Can't find Primary Key Value of null");
         }
         for (Map.Entry<Class, PrimarySerializer> ecp : primarySerializers.entrySet()) {
@@ -77,7 +85,7 @@ public class TOConnection {
      *
      * @param type the class for the dao you want.
      * @param <T>  the type
-     * @param <I> the ID type
+     * @param <I>  the ID type
      * @return the Dao
      * @see Dao
      */
