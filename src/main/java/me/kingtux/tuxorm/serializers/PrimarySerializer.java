@@ -1,17 +1,17 @@
 package me.kingtux.tuxorm.serializers;
 
-import me.kingtux.tuxorm.TOObject;
+import me.kingtux.tuxorm.toobjects.TOObject;
 import me.kingtux.tuxorm.TOResult;
 
-public interface PrimarySerializer<T, ID> {
+public interface PrimarySerializer<T, I> {
 
-    ID insert(T t);
+    I insert(T t);
 
     void delete(T t);
 
     void update(T t);
 
-    void build(TOResult toResult);
+    T build(TOResult toResult);
 
     TOObject getTOObject();
 

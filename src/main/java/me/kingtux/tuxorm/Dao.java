@@ -1,5 +1,7 @@
 package me.kingtux.tuxorm;
 
+import me.kingtux.tuxorm.toobjects.TOObject;
+
 import java.util.List;
 import java.util.Optional;
 

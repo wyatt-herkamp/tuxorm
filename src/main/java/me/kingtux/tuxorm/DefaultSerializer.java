@@ -11,6 +11,8 @@ import dev.tuxjsql.core.sql.SQLTable;
 import dev.tuxjsql.core.sql.UpdateStatement;
 import me.kingtux.tuxorm.annotations.TableColumn;
 import me.kingtux.tuxorm.exceptions.MissingValueException;
+import me.kingtux.tuxorm.toobjects.SimpleTOObject;
+import me.kingtux.tuxorm.toobjects.TOObject;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;
 import me.kingtux.tuxorm.serializers.SecondarySerializer;
 import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
@@ -195,8 +197,8 @@ public final class DefaultSerializer {
         TableBuilder tableBuilder = builder.createTable().setName(tName);
         columns.forEach(tableBuilder::addColumn);
         SQLTable table = tableBuilder.createTable();
-        if (table.getPrimaryColumn() == null) throw new TOException("All TuxORM objects must have a Primary Key");
-        objects.put(tableClass, new TOObject(tableClass, table, extraTables));
+        if (table.getPrimaryColumn() == null) throw new TOException("All TuxORM toobjects must have a Primary Key");
+        objects.put(tableClass, new SimpleTOObject(tableClass, table, extraTables));
     }
 
     public ColumnBuilder createColumn(Field field) {

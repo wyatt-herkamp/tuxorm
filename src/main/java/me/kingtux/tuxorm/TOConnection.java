@@ -95,7 +95,6 @@ public class TOConnection {
         if (getPrimarySerializer(type) == null) {
             dao = new DefaultSerializerDao<>(defaultSerializer.getToObject(type), defaultSerializer, this);
         } else {
-            //TODO add support for customSerializer Daos
             dao = new PrimarySerializerDao(type, getPrimarySerializer(type), this);
         }
         return dao;

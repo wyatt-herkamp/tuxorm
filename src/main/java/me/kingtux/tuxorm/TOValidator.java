@@ -1,6 +1,7 @@
 package me.kingtux.tuxorm;
 
 import me.kingtux.tuxorm.annotations.DBTable;
+import me.kingtux.tuxorm.toobjects.TOObject;
 
 import java.lang.reflect.InvocationTargetException;
 
