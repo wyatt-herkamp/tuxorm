@@ -1,8 +1,4 @@
 # TuxORM
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=me.kingtux%3Atuxorm&metric=ncloc)](https://sonarcloud.io/dashboard?id=me.kingtux%3Atuxorm)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=me.kingtux%3Atuxorm&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=me.kingtux%3Atuxorm)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=me.kingtux%3Atuxorm&metric=security_rating)](https://sonarcloud.io/dashboard?id=me.kingtux%3Atuxorm)
-[![Build Status](https://travis-ci.org/wherkamp/tuxorm.svg?branch=master)](https://travis-ci.org/wherkamp/tuxorm)
 TuxORM is a simple to use orm. That uses a [Dao](https://en.wikipedia.org/wiki/Data_access_object). 
 I wrote this with the database tool [TuxJSQL](https://github.com/wherkamp/tuxjsql). I use a lot of magical code. 
 
