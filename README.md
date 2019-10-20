@@ -1,10 +1,10 @@
 # TuxORM
 TuxORM is a simple to use orm. That uses a [Dao](https://en.wikipedia.org/wiki/Data_access_object). 
-I wrote this with the database tool [TuxJSQL](https://github.com/wherkamp/tuxjsql). I use a lot of magical code. 
+I wrote this with the database tool [TuxJSQL](https://tuxjsql.dev/). I use a lot of magical code. 
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/me.kingtux/tuxorm/badge.svg)](https://mvnrepository.com/artifact/me.kingtux/tuxorm)
 
-Read [this](https://github.com/wherkamp/tuxjsql/wiki/Creating-your-first-TuxJSQL-SQLBuilder)
+Read [this](https://tuxjsql.dev/)
 
 
 # How to use 
