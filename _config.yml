@@ -1,0 +1,10 @@
+remote_theme: pmarsceill/just-the-docs
+
+title: TuxORM
+description: A simple to use ORM
+baseurl: "/tuxorm"
+url: "https://kingtux.dev"
+
+aux_links:
+  "TuxORM on GitHub":
+    - "https://github.com/wherkamp/tuxorm"
