@@ -12,11 +12,19 @@ public interface ORMField {
 
     SQLTable getTable();
 
+    ORMFieldType fieldType();
+
     Object getValue(Object instance);
 
-    void setValue(Object instance);
+    void setValue(Object instance, Object value);
 
-    void insert(Object value);
+    /**
+     * Returns the value that will be put in the database
+     *
+     * @param instance the instance of the value
+     * @return the better value
+     */
+    Object insert(Object instance);
 
     void insert(Object value, Object parentKey);
 
