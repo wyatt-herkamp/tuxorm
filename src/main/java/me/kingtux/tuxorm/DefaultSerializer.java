@@ -37,7 +37,7 @@ public final class DefaultSerializer {
     }
 
     public Class<?> getPrimaryKeyType(Class<?> firstType) {
-        for (Field field : firstType.getDeclaredFields()) {
+        for (Field field : TOUtils.getFields(firstType)) {
             TableColumn tc = field.getAnnotation(TableColumn.class);
             if (tc == null) continue;
             if (tc.primary()) return field.getType();
@@ -46,6 +46,9 @@ public final class DefaultSerializer {
     }
 
     public void update(Object value, TOObject toObject) {
+        if (value instanceof SimpleObject){
+            ((SimpleObject) value).updatedOn = System.currentTimeMillis();
+        }
         Object primaryKeyValue = TOValidator.validateUpdate(value, toObject, this);
         try {
             for (Map.Entry<Field, SQLTable> extraTables : toObject.getOtherObjects().entrySet()) {
@@ -53,7 +56,7 @@ public final class DefaultSerializer {
                 mss.delete(primaryKeyValue, extraTables.getKey(), extraTables.getValue());
             }
             Map<SQLColumn, Object> update = new HashMap<>();
-            for (Field field : value.getClass().getDeclaredFields()) {
+            for (Field field : TOUtils.getFields(value.getClass())) {
                 TableColumn tc = field.getAnnotation(TableColumn.class);
                 if (tc == null) continue;
                 field.setAccessible(true);
@@ -97,7 +100,7 @@ public final class DefaultSerializer {
         Object primaryKeyValue = null;
         try {
             Map<SQLColumn, Object> insert = new HashMap<>();
-            for (Field field : value.getClass().getDeclaredFields()) {
+            for (Field field : TOUtils.getFields(value.getClass())) {
                 TableColumn tc = field.getAnnotation(TableColumn.class);
                 if (tc == null) continue;
                 field.setAccessible(true);
@@ -151,7 +154,7 @@ public final class DefaultSerializer {
     }
 
     public Object getPrimaryKey(Object object) {
-        for (Field field : object.getClass().getDeclaredFields()) {
+        for (Field field : TOUtils.getFields(object.getClass())) {
             TableColumn tc = field.getAnnotation(TableColumn.class);
             if (tc == null || !tc.primary()) continue;
             field.setAccessible(true);
@@ -171,7 +174,7 @@ public final class DefaultSerializer {
         Map<Field, SQLTable> extraTables = new HashMap<>();
         SQLBuilder builder = toConnection.getBuilder();
         String tName = TOUtils.getClassName(tableClass);
-        for (Field field : tableClass.getDeclaredFields()) {
+        for (Field field : TOUtils.getFields(tableClass)) {
             if (field.getAnnotation(TableColumn.class) == null) continue;
             field.setAccessible(true);
             if (isAnyTypeBasic(field.getType())) {
@@ -232,7 +235,7 @@ public final class DefaultSerializer {
                 MultiSecondarySerializer mss = (MultiSecondarySerializer) toConnection.getSecondarySerializer(entry.getKey().getType());
                 entry.getKey().set(t, mss.build(entry.getValue().getResult(), entry.getKey()));
             }
-            for (Field field : item.getDeclaredFields()) {
+            for (Field field : TOUtils.getFields(item)) {
 
                 field.setAccessible(true);
                 TableColumn tc = field.getAnnotation(TableColumn.class);

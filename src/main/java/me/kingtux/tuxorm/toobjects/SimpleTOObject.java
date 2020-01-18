@@ -50,7 +50,7 @@ public class SimpleTOObject implements TOObject{
     }
 
     public Field getFieldForColumnName(String columnName) {
-        for (Field field : type.getDeclaredFields()) {
+        for (Field field : TOUtils.getFields(type)) {
             if (field.getAnnotation(TableColumn.class) == null) continue;
             if (TOUtils.getColumnNameByField(field).equals(columnName)) {
                 return field;

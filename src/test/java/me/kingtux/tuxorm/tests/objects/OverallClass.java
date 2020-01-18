@@ -1,5 +1,6 @@
 package me.kingtux.tuxorm.tests.objects;
 
+import me.kingtux.tuxorm.SimpleObject;
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 
@@ -10,13 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 @DBTable
-public class OverallClass {
-    @TableColumn(autoIncrement = true, primary = true)
-    private long id;
-    @TableColumn
-    private long createdOn = System.currentTimeMillis();
-    @TableColumn
-    private long updatedLast = System.currentTimeMillis();
+public class OverallClass extends SimpleObject {
+
     @TableColumn()
     private String name = "GAY";
     @TableColumn

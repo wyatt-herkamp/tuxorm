@@ -37,6 +37,15 @@ public class TOUtils {
         return false;
     }
 
+    public static List<Field> getFields(Class<?> clazz) {
+        List<Field> fields = new ArrayList<>();
+        while (clazz != Object.class) {
+            fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+            clazz = clazz.getSuperclass();
+        }
+        return fields;
+    }
+
     public static boolean isSemiBasic(Class<?> e) {
         for (Class<?> c : semiBasicTypes) {
             if (c.isAssignableFrom(e)) {
@@ -113,7 +122,7 @@ public class TOUtils {
     public static <T> Object quickGet(Class<T> type, Object id, TOConnection connection) {
 
         Dao<T, Object> dao = connection.createDao(type);
-        return dao.findByID(id).orElseThrow(()->new UnableToLocateException("Unable to get sub value"));
+        return dao.findByID(id).orElseThrow(() -> new UnableToLocateException("Unable to get sub value"));
     }
 
     public static TableBuilder basicTable(SQLBuilder builder, String name, SQLDataType parentDataType) {
@@ -188,8 +197,8 @@ public class TOUtils {
                     }
                 }
             }
-        }catch (InterruptedException e){
-            TOConnection.logger.error("Unable to get value",e);
+        } catch (InterruptedException e) {
+            TOConnection.logger.error("Unable to get value", e);
             Thread.currentThread().interrupt();
         }
         if (result == null) return Collections.emptyList();
@@ -200,7 +209,7 @@ public class TOUtils {
     public static List<Object> ids(DBSelect result, Object o) {
         List<Object> objects = new ArrayList<>();
         for (DBRow row : result) {
-            objects.add(rebuildObject(o.getClass(), row.getColumn(PARENT_ID_NAME).orElseThrow(()-> new MissingValueException("Unable to locate "+ PARENT_ID_NAME)).getAsObject()));
+            objects.add(rebuildObject(o.getClass(), row.getColumn(PARENT_ID_NAME).orElseThrow(() -> new MissingValueException("Unable to locate " + PARENT_ID_NAME)).getAsObject()));
         }
 
         return objects;

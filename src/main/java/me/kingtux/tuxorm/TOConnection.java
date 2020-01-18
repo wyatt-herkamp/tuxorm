@@ -26,8 +26,8 @@ import java.util.Map;
  */
 public class TOConnection {
     private TuxJSQL tuxJSQL;
-    Map<Class, PrimarySerializer> primarySerializers = new HashMap<>();
-    Map<Class<?>, SecondarySerializer> secondarySerializers = new HashMap<>();
+    private Map<Class<?>, PrimarySerializer> primarySerializers = new HashMap<>();
+    private Map<Class<?>, SecondarySerializer> secondarySerializers = new HashMap<>();
     private DefaultSerializer defaultSerializer;
     public static final Logger logger = LoggerFactory.getLogger("TuxORM");
     private List<Class<?>> registeredClasses = new ArrayList<>();
@@ -60,7 +60,7 @@ public class TOConnection {
     }
 
     public Class<?> getPrimaryType(Class<?> firstType) {
-        for (Map.Entry<Class, PrimarySerializer> ecp : primarySerializers.entrySet()) {
+        for (Map.Entry<Class<?>, PrimarySerializer> ecp : primarySerializers.entrySet()) {
             if (firstType.isAssignableFrom(ecp.getKey())) {
                 return ecp.getValue().getPrimaryKeyType();
             }
@@ -72,7 +72,7 @@ public class TOConnection {
         if (object == null) {
             throw new NullPointerException("Can't find Primary Key Value of null");
         }
-        for (Map.Entry<Class, PrimarySerializer> ecp : primarySerializers.entrySet()) {
+        for (Map.Entry<Class<?>, PrimarySerializer> ecp : primarySerializers.entrySet()) {
             if (ecp.getKey().isInstance(object)) {
                 return ecp.getValue().getPrimaryKey(object);
             }
@@ -155,7 +155,7 @@ public class TOConnection {
     }
 
     public PrimarySerializer getPrimarySerializer(Class<?> type) {
-        for (Map.Entry<Class, PrimarySerializer> ecp : primarySerializers.entrySet()) {
+        for (Map.Entry<Class<?>, PrimarySerializer> ecp : primarySerializers.entrySet()) {
             if (type.isAssignableFrom(ecp.getKey())) {
                 return ecp.getValue();
             }

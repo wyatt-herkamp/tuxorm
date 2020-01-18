@@ -8,7 +8,6 @@ import me.kingtux.tuxorm.tests.objects.Item;
 import me.kingtux.tuxorm.tests.objects.OverallClass;
 import me.kingtux.tuxorm.tests.objects.SecondObject;
 import org.junit.jupiter.api.Test;
-import sun.applet.Main;
 
 import java.io.File;
 import java.io.FileReader;
@@ -64,8 +63,12 @@ public class TestMain {
     public void mysqlTest() {
         Properties properties = getLocalProperties();
         properties.setProperty("db.type", "dev.tuxjsql.mysql.MysqlBuilder");
-
-        TOConnection connection = new TOConnection(TuxJSQLBuilder.create(properties));
+        TuxJSQL tuxJSQL = TuxJSQLBuilder.create(properties);
+        //Next Version of TuxJSQL will return null on failure to connect
+        if (tuxJSQL == null) {
+            return;
+        }
+        TOConnection connection = new TOConnection(tuxJSQL);
         connection.registerSecondarySerializer(Item.class, new TestSubMMS(connection));
         connection.registerClass(OverallClass.class);
         //Create Daos
