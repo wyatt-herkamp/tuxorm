@@ -46,8 +46,8 @@ public final class DefaultSerializer {
     }
 
     public void update(Object value, TOObject toObject) {
-        if (value instanceof SimpleObject){
-            ((SimpleObject) value).updatedOn = System.currentTimeMillis();
+        if (value instanceof BasicLoggingObject){
+            ((BasicLoggingObject) value).updatedOn = System.currentTimeMillis();
         }
         Object primaryKeyValue = TOValidator.validateUpdate(value, toObject, this);
         try {

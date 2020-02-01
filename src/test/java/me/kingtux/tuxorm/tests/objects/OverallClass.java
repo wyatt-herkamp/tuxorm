@@ -1,6 +1,6 @@
 package me.kingtux.tuxorm.tests.objects;
 
-import me.kingtux.tuxorm.SimpleObject;
+import me.kingtux.tuxorm.BasicLoggingObject;
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;
 
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @DBTable
-public class OverallClass extends SimpleObject {
+public class OverallClass extends BasicLoggingObject {
 
     @TableColumn()
     private String name = "GAY";
