@@ -27,6 +27,9 @@ public class OverallClass extends BasicLoggingObject {
     private Map<Integer, Item> items = new HashMap<>();
     @TableColumn
     private Item item = new Item("bob", 1234);
+    @TableColumn
+    private TestEnum testEnum;
+
     public OverallClass(String name) {
         this.name = name;
     }
@@ -35,6 +38,13 @@ public class OverallClass extends BasicLoggingObject {
         this.name = name;
         this.object = object;
         this.longs = longs;
+    }
+
+    public OverallClass(String name, SecondObject object, List<Long> longs, TestEnum testEnum) {
+        this.name = name;
+        this.object = object;
+        this.longs = longs;
+        this.testEnum = testEnum;
     }
 
     public OverallClass() {
@@ -76,5 +86,13 @@ public class OverallClass extends BasicLoggingObject {
 
     public SecondObject getObject() {
         return object;
+    }
+
+    public TestEnum getTestEnum() {
+        return testEnum;
+    }
+
+    public void setTestEnum(TestEnum testEnum) {
+        this.testEnum = testEnum;
     }
 }

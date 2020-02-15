@@ -7,6 +7,7 @@ import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.tests.objects.Item;
 import me.kingtux.tuxorm.tests.objects.OverallClass;
 import me.kingtux.tuxorm.tests.objects.SecondObject;
+import me.kingtux.tuxorm.tests.objects.TestEnum;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -46,7 +47,9 @@ public class TestMain {
         //Test Updating
         clazz.setName("Cool Guy");
         clazz.setLongs(Arrays.asList(3L, 6L, 8L, 9L));
+        clazz.setTestEnum(TestEnum.TWO);
         dao.update(clazz);
+        clazz = dao.refresh(clazz);
         assertNotNull(dao.fetchFirst("name", "Cool Guy"));
         //Test Custom Fetching
         assertNotNull(dao.fetchFirst("file", new File("test.txt")));
@@ -56,7 +59,7 @@ public class TestMain {
         assertNotNull(dao.fetchFirst("item", new Item("bob", 1234)));
         assertTrue(dao.fetchAll().size() >= 1);
         assertNotNull(dao.fetchAll().get(0));
-
+        assertTrue(clazz.getTestEnum() == TestEnum.TWO);
     }
 
     @Test
@@ -87,7 +90,9 @@ public class TestMain {
         //Test Updating
         clazz.setName("Cool Guy");
         clazz.setLongs(Arrays.asList(3L, 6L, 8L, 9L));
+        clazz.setTestEnum(TestEnum.TWO);
         dao.update(clazz);
+        clazz = dao.refresh(clazz);
         assertNotNull(dao.fetchFirst("name", "Cool Guy"));
         //Test Custom Fetching
         assertNotNull(dao.fetchFirst("file", new File("test.txt")));
@@ -97,6 +102,8 @@ public class TestMain {
         assertNotNull(dao.fetchFirst("item", new Item("bob", 1234)));
         assertTrue(dao.fetchAll().size() >= 1);
         assertNotNull(dao.fetchAll().get(0));
+        assertTrue(clazz.getTestEnum() == TestEnum.TWO);
+
     }
 
     private Properties getLocalProperties() {
