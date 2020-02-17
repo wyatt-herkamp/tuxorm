@@ -36,7 +36,7 @@ public class SimpleORMField implements ORMField {
 
     @Override
     public SQLTable getTable() {
-        return null;
+        return sqlTable;
     }
 
     @Override

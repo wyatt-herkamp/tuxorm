@@ -1,6 +1,8 @@
 package me.kingtux.tuxorm.config;
 
 public class ORMConfig {
+    private int executorSize = 1;
+
     private ORMConfig() {
     }
 
@@ -10,5 +12,9 @@ public class ORMConfig {
 
     public static ORMConfig getDefaultConfig() {
         return createConfig();
+    }
+
+    public int getExecutorSize() {
+        return executorSize;
     }
 }

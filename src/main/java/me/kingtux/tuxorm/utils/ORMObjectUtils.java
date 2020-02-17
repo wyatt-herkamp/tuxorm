@@ -6,6 +6,8 @@ import me.kingtux.tuxorm.internal.ORMObject;
 import java.util.List;
 
 public class ORMObjectUtils {
+
+
     public static boolean containsByType(Class<?> type, List<ORMObject> objects) {
         return getObjectByType(type, objects) != null;
     }

@@ -3,9 +3,9 @@ package me.kingtux.tuxorm;
 import dev.tuxjsql.core.TuxJSQL;
 import me.kingtux.tuxorm.config.ORMConfig;
 import me.kingtux.tuxorm.dao.Dao;
+import me.kingtux.tuxorm.dao.DaoManager;
 import me.kingtux.tuxorm.internal.ORMObject;
 import me.kingtux.tuxorm.serializer.DefaultSerializer;
-import me.kingtux.tuxorm.serializer.DefaultSerializerUtils;
 import me.kingtux.tuxorm.serializer.SerializerManager;
 import me.kingtux.tuxorm.utils.ORMObjectUtils;
 import org.slf4j.Logger;
@@ -13,12 +13,16 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class TuxORM {
     private TuxJSQL tuxJSQL;
     private ORMConfig config;
     private List<ORMObject> registeredObjects = new ArrayList<>();
+    private DaoManager daoManager;
     private SerializerManager serializerManager = new SerializerManager(this);
+    private ExecutorService executorService;
     public static final Logger LOGGER = LoggerFactory.getLogger(TuxORM.class);
 
     public TuxORM(TuxJSQL tuxJSQL) {
@@ -33,6 +37,7 @@ public final class TuxORM {
         this.tuxJSQL = tuxJSQL;
         this.config = config;
         if (serializerManager != null) this.serializerManager = serializerManager;
+        executorService = Executors.newFixedThreadPool(config.getExecutorSize());
     }
 
     public <T, I> Dao<T, I> createDao(Class<?> clazz) {
@@ -47,7 +52,7 @@ public final class TuxORM {
     }
 
     public <T, I> Dao<T, I> createDao(ORMObject object) {
-        return null;
+        return daoManager.createDao(object);
     }
 
     public void registerObject(Class<?> clazz) {
@@ -67,5 +72,9 @@ public final class TuxORM {
 
     public SerializerManager getSerializerManager() {
         return serializerManager;
+    }
+
+    public TuxJSQL getTuxJSQL() {
+        return tuxJSQL;
     }
 }

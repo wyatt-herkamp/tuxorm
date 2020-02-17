@@ -14,7 +14,7 @@ public @interface DatabateTable {
      *
      * @return Your custom name of your table.
      */
-    String name() default "";
+    String value() default "";
 
 
 }

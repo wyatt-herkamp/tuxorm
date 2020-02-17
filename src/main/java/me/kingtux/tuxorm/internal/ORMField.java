@@ -19,7 +19,7 @@ public interface ORMField {
     void setValue(Object instance, Object value);
 
     /**
-     * Returns the value that will be put in the database
+     * Returns the value that will be put in the database.
      *
      * @param instance the instance of the value
      * @return the better value
