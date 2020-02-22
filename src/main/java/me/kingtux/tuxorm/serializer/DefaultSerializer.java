@@ -5,8 +5,11 @@ import me.kingtux.tuxorm.TuxORM;
 import me.kingtux.tuxorm.internal.ORMObject;
 import me.kingtux.tuxorm.internal.ORMResult;
 
-public interface DefaultSerializer {
+public interface DefaultSerializer extends Serializer{
 
+    boolean isORMObjectCompatible(Class<?> clazz);
+
+    Object getPrimaryKey(Object object);
 
     ORMObject createORMObject(Class<?> clazz);
 

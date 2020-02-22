@@ -6,6 +6,7 @@ import me.kingtux.tuxorm.internal.ORMObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SimpleORMObject implements ORMObject {
     private String name;
@@ -16,7 +17,7 @@ public class SimpleORMObject implements ORMObject {
     public SimpleORMObject(String name, Class<?> clazz, List<ORMField> ormFields, SQLTable table) {
         this.name = name;
         this.clazz = clazz;
-        this.ormFields = ormFields;
+        this.ormFields = new ArrayList<>(ormFields);
         this.table = table;
     }
 

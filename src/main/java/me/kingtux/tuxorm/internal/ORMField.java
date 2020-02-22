@@ -1,32 +1,26 @@
 package me.kingtux.tuxorm.internal;
 
+import dev.tuxjsql.core.response.DBColumnItem;
+import dev.tuxjsql.core.sql.SQLColumn;
 import dev.tuxjsql.core.sql.SQLTable;
+import me.kingtux.tuxorm.serializer.Serializer;
 
 import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface ORMField {
 
+    Serializer getSerializer();
 
     Field getField();
 
-    SQLTable getTable();
+    Map<SQLColumn, Object> parse(Object object);
 
-    ORMFieldType fieldType();
+    Object parse(List<DBColumnItem> dbColumnItemList);
 
-    Object getValue(Object instance);
+    void set(Object object, Object instance);
 
-    void setValue(Object instance, Object value);
-
-    /**
-     * Returns the value that will be put in the database.
-     *
-     * @param instance the instance of the value
-     * @return the better value
-     */
-    Object insert(Object instance);
-
-    void insert(Object value, Object parentKey);
-
-    Object getFieldResult(ORMResult result);
+    Object get(Object instance);
 }

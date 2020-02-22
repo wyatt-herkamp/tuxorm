@@ -23,7 +23,7 @@ public class TuxORMUtils {
         return fields;
     }
 
-    public String getTableName(Class<?> clazz) {
+    public static String getTableName(Class<?> clazz) {
         DatabateTable table = clazz.getAnnotation(DatabateTable.class);
         if (table.value().equals("")) return clazz.getSimpleName().toLowerCase();
         return table.value();

@@ -1,4 +1,4 @@
 package me.kingtux.tuxorm.serializer;
 
-public interface PrimarySerializer {
+public interface PrimarySerializer extends Serializer{
 }
