@@ -2,6 +2,7 @@ package me.kingtux.tuxorm.internal.implementations;
 
 import dev.tuxjsql.core.response.DBColumnItem;
 import dev.tuxjsql.core.sql.SQLColumn;
+import dev.tuxjsql.core.sql.SQLTable;
 import me.kingtux.tuxorm.internal.ORMField;
 import me.kingtux.tuxorm.serializer.Serializer;
 
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ComplexExternalORMField implements ORMField {
+    private SQLTable table;
     @Override
     public Serializer getSerializer() {
         return null;
@@ -17,6 +19,11 @@ public class ComplexExternalORMField implements ORMField {
 
     @Override
     public Field getField() {
+        return null;
+    }
+
+    @Override
+    public String getColumnName() {
         return null;
     }
 
@@ -38,5 +45,13 @@ public class ComplexExternalORMField implements ORMField {
     @Override
     public Object get(Object instance) {
         return null;
+    }
+
+    public SQLTable getTable() {
+        return table;
+    }
+
+    public void setTable(SQLTable table) {
+        this.table = table;
     }
 }

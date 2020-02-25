@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface DatabateTable {
+public @interface Table {
 
     /**
      * If you want to specify the table name.

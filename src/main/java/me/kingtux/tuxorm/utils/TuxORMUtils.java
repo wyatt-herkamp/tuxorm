@@ -1,6 +1,7 @@
 package me.kingtux.tuxorm.utils;
 
-import me.kingtux.tuxorm.annotations.DatabateTable;
+import me.kingtux.tuxorm.annotations.Column;
+import me.kingtux.tuxorm.annotations.Table;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -24,8 +25,14 @@ public class TuxORMUtils {
     }
 
     public static String getTableName(Class<?> clazz) {
-        DatabateTable table = clazz.getAnnotation(DatabateTable.class);
+        Table table = clazz.getAnnotation(Table.class);
         if (table.value().equals("")) return clazz.getSimpleName().toLowerCase();
         return table.value();
+    }
+
+    public static String getFieldName(Field field) {
+        Column column = field.getAnnotation(Column.class);
+        if (column.name().equals("")) return field.getName().toLowerCase();
+        return column.name();
     }
 }

@@ -16,6 +16,8 @@ public interface ORMField {
 
     Field getField();
 
+    String getColumnName();
+
     Map<SQLColumn, Object> parse(Object object);
 
     Object parse(List<DBColumnItem> dbColumnItemList);
