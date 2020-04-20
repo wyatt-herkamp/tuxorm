@@ -4,6 +4,7 @@ I wrote this with the database tool [TuxJSQL](https://tuxjsql.dev/). I use a lot
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/me.kingtux/tuxorm/badge.svg)](https://mvnrepository.com/artifact/me.kingtux/tuxorm)
 
+Discord: https://discord.gg/qtCKz4X
 
 ### Getting Started
 
