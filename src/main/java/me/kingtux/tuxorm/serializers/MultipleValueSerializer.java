@@ -14,12 +14,11 @@ import java.util.Map;
  * If it has multiple values like lists and maps use this.
  * Warning this defaults the SUbMMS methods
  *
- * @param <T>
+ * @param <T> Type to Serialize
  */
 public interface MultipleValueSerializer<T> extends MultiSecondarySerializer<T> {
 
     List<Object> contains(Object o, SQLTable table);
-
 
 
     //The defaults

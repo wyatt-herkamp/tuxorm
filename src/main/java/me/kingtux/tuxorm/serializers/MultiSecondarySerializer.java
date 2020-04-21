@@ -55,8 +55,8 @@ public interface MultiSecondarySerializer<T> extends SecondarySerializer<T> {
 
     /**
      * These columns are used for other MultiSecondarySerializer.
-     *
-     * @return
+     * @param after What all column names must have after it.
+     * @return a list of Columns
      */
     List<ColumnBuilder> getColumns(String after);
 

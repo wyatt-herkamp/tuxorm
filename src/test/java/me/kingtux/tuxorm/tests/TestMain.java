@@ -21,9 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestMain {
 
-
     @Test
-    public void baseTests() {
+    public void baseTests() throws Exception {
         Properties properties = new Properties();
         properties.setProperty("db.type", "dev.tuxjsql.sqlite.SQLiteBuilder");
         properties.setProperty("db.file", "db.db");
@@ -63,7 +62,7 @@ public class TestMain {
     }
 
     @Test
-    public void mysqlTest() {
+    public void mysqlTest() throws Exception {
         Properties properties = getLocalProperties();
         properties.setProperty("db.type", "dev.tuxjsql.mysql.MysqlBuilder");
         TuxJSQL tuxJSQL = TuxJSQLBuilder.create(properties);

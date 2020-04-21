@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @DBTable
-public class SecondObject  {
+public class SecondObject  implements CrappyInterface{
     @TableColumn(autoIncrement = true, primary = true)
     private long id;
     @TableColumn
