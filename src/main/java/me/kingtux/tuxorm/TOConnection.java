@@ -11,6 +11,7 @@ import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 import me.kingtux.tuxorm.serializers.builtin.FileSerializer;
 import me.kingtux.tuxorm.serializers.builtin.ListSerializer;
 import me.kingtux.tuxorm.serializers.builtin.MapSerializer;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,6 +90,7 @@ public class TOConnection {
      * @return the Dao
      * @see Dao
      */
+    @NotNull
     public <T, I> Dao<T, I> createDao(Class<T> type) {
         registerClass(type);
         Dao<T, I> dao;
@@ -108,6 +110,7 @@ public class TOConnection {
      * @param <I> the ID type
      * @return the dao
      */
+    @NotNull
     public <T, I> Dao<T, I> createDao(T type) {
         return (Dao) createDao(type.getClass());
     }

@@ -1,6 +1,8 @@
 package me.kingtux.tuxorm;
 
 import me.kingtux.tuxorm.toobjects.TOObject;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,14 +16,16 @@ public interface Dao<T, I> {
      * Inserts the item into the system.
      *
      * @param t the value
-     * @return a recreation of the object you just sent.
+     * @return a recreation of the object you just sent. Null if unable to create
      */
+    @Nullable
     T create(T t);
 
     List<T> fetchAll();
 
     List<T> fetch(String columnName, Object value);
 
+    @NotNull
     default Optional<T> fetchFirst(String columnName, Object value) {
         List<T> t = fetch(columnName, value);
         if (t == null || t.isEmpty()) return Optional.empty();
@@ -35,7 +39,7 @@ public interface Dao<T, I> {
     default void updateOrCreate(T t) {
         if (getConnection().getPrimaryValue(t) == null) {
             create(t);
-        }else{
+        } else {
             update(t);
         }
     }
