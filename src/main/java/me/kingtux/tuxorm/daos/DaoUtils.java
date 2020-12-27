@@ -1,11 +1,11 @@
 package me.kingtux.tuxorm.daos;
 
-import dev.tuxjsql.core.TuxJSQL;
-import dev.tuxjsql.core.response.DBColumnItem;
-import dev.tuxjsql.core.response.DBRow;
-import dev.tuxjsql.core.response.DBSelect;
-import dev.tuxjsql.core.sql.SQLTable;
-import dev.tuxjsql.core.sql.where.WhereStatement;
+import me.kingtux.tuxjsql.core.TuxJSQL;
+import me.kingtux.tuxjsql.core.response.DBColumnItem;
+import me.kingtux.tuxjsql.core.response.DBRow;
+import me.kingtux.tuxjsql.core.response.DBSelect;
+import me.kingtux.tuxjsql.core.sql.SQLTable;
+import me.kingtux.tuxjsql.core.sql.where.WhereStatement;
 import me.kingtux.tuxorm.*;
 import me.kingtux.tuxorm.exceptions.MissingValueException;
 import me.kingtux.tuxorm.toobjects.TOObject;

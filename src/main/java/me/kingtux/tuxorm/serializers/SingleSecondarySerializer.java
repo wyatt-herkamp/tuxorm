@@ -1,7 +1,7 @@
 package me.kingtux.tuxorm.serializers;
 
-import dev.tuxjsql.core.builders.ColumnBuilder;
-import dev.tuxjsql.core.sql.SQLColumn;
+import me.kingtux.tuxjsql.core.builders.ColumnBuilder;
+import me.kingtux.tuxjsql.core.sql.SQLColumn;
 
 
 /**

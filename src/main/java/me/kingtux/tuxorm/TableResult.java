@@ -1,9 +1,9 @@
 package me.kingtux.tuxorm;
 
 
-import dev.tuxjsql.core.response.DBRow;
-import dev.tuxjsql.core.response.DBSelect;
-import dev.tuxjsql.core.sql.SQLTable;
+import me.kingtux.tuxjsql.core.response.DBRow;
+import me.kingtux.tuxjsql.core.response.DBSelect;
+import me.kingtux.tuxjsql.core.sql.SQLTable;
 
 public class TableResult {
     private DBRow row;

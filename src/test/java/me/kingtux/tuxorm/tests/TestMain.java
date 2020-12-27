@@ -1,7 +1,7 @@
 package me.kingtux.tuxorm.tests;
 
-import dev.tuxjsql.core.TuxJSQL;
-import dev.tuxjsql.core.TuxJSQLBuilder;
+import me.kingtux.tuxjsql.core.TuxJSQL;
+import me.kingtux.tuxjsql.core.TuxJSQLBuilder;
 import me.kingtux.tuxorm.Dao;
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.tests.objects.Item;
@@ -24,7 +24,7 @@ public class TestMain {
     @Test
     public void baseTests() throws Exception {
         Properties properties = new Properties();
-        properties.setProperty("db.type", "dev.tuxjsql.sqlite.SQLiteBuilder");
+        properties.setProperty("db.type", "me.kingtux.tuxjsql.sqlite.SQLiteBuilder");
         properties.setProperty("db.file", "db.db");
         new File("db.db").deleteOnExit();
         TOConnection connection = new TOConnection(TuxJSQLBuilder.create(properties));
@@ -49,13 +49,14 @@ public class TestMain {
         clazz.setTestEnum(TestEnum.TWO);
         dao.update(clazz);
         clazz = dao.refresh(clazz);
-        assertNotNull(dao.fetchFirst("name", "Cool Guy"));
+        assertNotNull(clazz.getFile());
+        assertNotNull(dao.fetchFirst("name", "Cool Guy").orElse(null));
         //Test Custom Fetching
-        assertNotNull(dao.fetchFirst("file", new File("test.txt")));
+        assertNotNull(dao.fetchFirst("file", new File("test.txt")).orElse(null));
         assertNotNull(dao.fetchFirst("object", sdao.findByID(1L)));
-        assertNotNull(dao.fetchFirst("longs", 3L));
-        assertNotNull(dao.fetchFirst("items", 45));
-        assertNotNull(dao.fetchFirst("item", new Item("bob", 1234)));
+        assertNotNull(dao.fetchFirst("longs", 3L).orElse(null));
+        assertNotNull(dao.fetchFirst("items", 45).orElse(null));
+        assertNotNull(dao.fetchFirst("item", new Item("bob", 1234)).orElse(null));
         assertTrue(dao.fetchAll().size() >= 1);
         assertNotNull(dao.fetchAll().get(0));
         assertTrue(clazz.getTestEnum() == TestEnum.TWO);
@@ -64,7 +65,7 @@ public class TestMain {
     @Test
     public void mysqlTest() throws Exception {
         Properties properties = getLocalProperties();
-        properties.setProperty("db.type", "dev.tuxjsql.mysql.MysqlBuilder");
+        properties.setProperty("db.type", "me.kingtux.tuxjsql.mysql.MysqlBuilder");
         TuxJSQL tuxJSQL = TuxJSQLBuilder.create(properties);
         //Next Version of TuxJSQL will return null on failure to connect
         if (tuxJSQL == null) {

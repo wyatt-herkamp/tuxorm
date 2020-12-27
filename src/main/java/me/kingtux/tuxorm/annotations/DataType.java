@@ -1,6 +1,6 @@
 package me.kingtux.tuxorm.annotations;
 
-import dev.tuxjsql.basic.sql.BasicDataTypes;
+import me.kingtux.tuxjsql.basic.sql.BasicDataTypes;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

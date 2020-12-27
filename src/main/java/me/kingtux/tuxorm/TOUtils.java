@@ -1,12 +1,12 @@
 package me.kingtux.tuxorm;
 
-import dev.tuxjsql.basic.sql.BasicDataTypes;
-import dev.tuxjsql.core.builders.SQLBuilder;
-import dev.tuxjsql.core.builders.TableBuilder;
-import dev.tuxjsql.core.response.DBRow;
-import dev.tuxjsql.core.response.DBSelect;
-import dev.tuxjsql.core.sql.SQLDataType;
-import dev.tuxjsql.core.sql.SQLTable;
+import me.kingtux.tuxjsql.basic.sql.BasicDataTypes;
+import me.kingtux.tuxjsql.core.builders.SQLBuilder;
+import me.kingtux.tuxjsql.core.builders.TableBuilder;
+import me.kingtux.tuxjsql.core.response.DBRow;
+import me.kingtux.tuxjsql.core.response.DBSelect;
+import me.kingtux.tuxjsql.core.sql.SQLDataType;
+import me.kingtux.tuxjsql.core.sql.SQLTable;
 
 import me.kingtux.tuxorm.annotations.DBTable;
 import me.kingtux.tuxorm.annotations.TableColumn;

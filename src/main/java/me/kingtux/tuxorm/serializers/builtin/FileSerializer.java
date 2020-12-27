@@ -1,9 +1,9 @@
 package me.kingtux.tuxorm.serializers.builtin;
 
 
-import dev.tuxjsql.basic.sql.BasicDataTypes;
-import dev.tuxjsql.core.builders.ColumnBuilder;
-import dev.tuxjsql.core.sql.SQLColumn;
+import me.kingtux.tuxjsql.basic.sql.BasicDataTypes;
+import me.kingtux.tuxjsql.core.builders.ColumnBuilder;
+import me.kingtux.tuxjsql.core.sql.SQLColumn;
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.serializers.SingleSecondarySerializer;
 

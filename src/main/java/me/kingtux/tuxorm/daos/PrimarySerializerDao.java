@@ -1,6 +1,6 @@
 package me.kingtux.tuxorm.daos;
 
-import dev.tuxjsql.core.sql.where.WhereStatement;
+import me.kingtux.tuxjsql.core.sql.where.WhereStatement;
 import me.kingtux.tuxorm.*;
 import me.kingtux.tuxorm.exceptions.UnableToLocateException;
 import me.kingtux.tuxorm.toobjects.TOObject;

@@ -1,7 +1,7 @@
 package me.kingtux.tuxorm.toobjects;
 
-import dev.tuxjsql.core.sql.SQLColumn;
-import dev.tuxjsql.core.sql.SQLTable;
+import me.kingtux.tuxjsql.core.sql.SQLColumn;
+import me.kingtux.tuxjsql.core.sql.SQLTable;
 import me.kingtux.tuxorm.TOUtils;
 import me.kingtux.tuxorm.annotations.TableColumn;
 

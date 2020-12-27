@@ -1,7 +1,7 @@
 package me.kingtux.tuxorm;
 
-import dev.tuxjsql.core.TuxJSQL;
-import dev.tuxjsql.core.builders.SQLBuilder;
+import me.kingtux.tuxjsql.core.TuxJSQL;
+import me.kingtux.tuxjsql.core.builders.SQLBuilder;
 import me.kingtux.tuxorm.daos.DefaultSerializerDao;
 import me.kingtux.tuxorm.daos.PrimarySerializerDao;
 import me.kingtux.tuxorm.serializers.MultiSecondarySerializer;

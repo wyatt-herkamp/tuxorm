@@ -1,14 +1,14 @@
 package me.kingtux.tuxorm;
 
 
-import dev.tuxjsql.core.builders.ColumnBuilder;
-import dev.tuxjsql.core.builders.SQLBuilder;
-import dev.tuxjsql.core.builders.TableBuilder;
-import dev.tuxjsql.core.response.DBInsert;
-import dev.tuxjsql.core.sql.InsertStatement;
-import dev.tuxjsql.core.sql.SQLColumn;
-import dev.tuxjsql.core.sql.SQLTable;
-import dev.tuxjsql.core.sql.UpdateStatement;
+import me.kingtux.tuxjsql.core.builders.ColumnBuilder;
+import me.kingtux.tuxjsql.core.builders.SQLBuilder;
+import me.kingtux.tuxjsql.core.builders.TableBuilder;
+import me.kingtux.tuxjsql.core.response.DBInsert;
+import me.kingtux.tuxjsql.core.sql.InsertStatement;
+import me.kingtux.tuxjsql.core.sql.SQLColumn;
+import me.kingtux.tuxjsql.core.sql.SQLTable;
+import me.kingtux.tuxjsql.core.sql.UpdateStatement;
 import me.kingtux.tuxorm.annotations.TableColumn;
 import me.kingtux.tuxorm.exceptions.MissingValueException;
 import me.kingtux.tuxorm.toobjects.SimpleTOObject;
@@ -251,6 +251,8 @@ public final class DefaultSerializer {
                     field.set(t, rebuildObject(field.getType(), value));
                 } else if (toConnection.getSecondarySerializer(field.getType()) != null) {
                     SecondarySerializer serializer = toConnection.getSecondarySerializer(field.getType());
+                    System.out.println("value.getClass().getName() = " + value.getClass().getName());
+                    System.out.println("value = " + value);
                     if (serializer instanceof SingleSecondarySerializer) {
                         field.set(t, ((SingleSecondarySerializer) serializer).buildFromSimplifiedValue(value));
                     }

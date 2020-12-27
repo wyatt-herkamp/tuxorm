@@ -95,4 +95,8 @@ public class OverallClass extends BasicLoggingObject {
     public void setTestEnum(TestEnum testEnum) {
         this.testEnum = testEnum;
     }
+
+    public File getFile() {
+        return file;
+    }
 }

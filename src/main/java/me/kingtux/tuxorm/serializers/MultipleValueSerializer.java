@@ -1,10 +1,10 @@
 package me.kingtux.tuxorm.serializers;
 
-import dev.tuxjsql.core.builders.ColumnBuilder;
-import dev.tuxjsql.core.response.DBColumnItem;
-import dev.tuxjsql.core.response.DBRow;
-import dev.tuxjsql.core.sql.SQLColumn;
-import dev.tuxjsql.core.sql.SQLTable;
+import me.kingtux.tuxjsql.core.builders.ColumnBuilder;
+import me.kingtux.tuxjsql.core.response.DBColumnItem;
+import me.kingtux.tuxjsql.core.response.DBRow;
+import me.kingtux.tuxjsql.core.sql.SQLColumn;
+import me.kingtux.tuxjsql.core.sql.SQLTable;
 
 import java.util.Collections;
 import java.util.List;

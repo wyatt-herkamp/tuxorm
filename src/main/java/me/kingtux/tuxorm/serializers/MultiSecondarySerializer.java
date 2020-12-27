@@ -1,13 +1,13 @@
 package me.kingtux.tuxorm.serializers;
 
-import dev.tuxjsql.core.builders.ColumnBuilder;
-import dev.tuxjsql.core.response.DBRow;
-import dev.tuxjsql.core.response.DBSelect;
-import dev.tuxjsql.core.sql.SQLColumn;
-import dev.tuxjsql.core.sql.SQLDataType;
-import dev.tuxjsql.core.sql.SQLTable;
+import me.kingtux.tuxjsql.core.builders.ColumnBuilder;
+import me.kingtux.tuxjsql.core.response.DBRow;
+import me.kingtux.tuxjsql.core.response.DBSelect;
+import me.kingtux.tuxjsql.core.sql.SQLColumn;
+import me.kingtux.tuxjsql.core.sql.SQLDataType;
+import me.kingtux.tuxjsql.core.sql.SQLTable;
 
-import dev.tuxjsql.core.sql.where.WhereStatement;
+import me.kingtux.tuxjsql.core.sql.where.WhereStatement;
 import me.kingtux.tuxorm.TOConnection;
 import me.kingtux.tuxorm.TOUtils;
 import me.kingtux.tuxorm.annotations.DataType;
